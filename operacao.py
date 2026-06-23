@@ -11,3 +11,5 @@ elif operacao == '*':
     print(num1*num2)
 else:
     print(num1/num2)
+
+#vai pegando o pai é bom
