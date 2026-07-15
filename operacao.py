@@ -12,4 +12,4 @@ elif operacao == '*':
 else:
     print(num1/num2)
 
-#vai pegando o pai é bom
+#vai pegando o pai é bom AHAHAH
