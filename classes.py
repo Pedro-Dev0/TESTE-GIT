@@ -1,3 +1,5 @@
+import random
+
 class hero:
     def __init__(self, nome, idade, tipo):
         self.nome = nome
@@ -22,10 +24,23 @@ class hero:
 
         return mensagem
 
-    
-meu_heroi = hero('pedro', 23, 'ninja')
-meu_heroi.ataque()
 
+nomes_disponiveis = ["Gandalf", "Aragorn", "Lee Sin", "Naruto", "Legolas", "Saitama"]
+classes_disponiveis = ["mago", "guerreiro", "monge", "ninja"]
+
+for rodada in range(0, 4):
+    print(f"\n[Rodada {rodada}]")
+    
+    # O Python escolhe os dados de forma aleatória aqui:
+    nome_sorteado = random.choice(nomes_disponiveis)
+    tipo_sorteado = random.choice(classes_disponiveis)
+    idade_sorteada = random.randint(15, 150)  # Sorteia uma idade entre 15 e 150 anos
+    
+    # Criamos o herói com os dados que o Python acabou de sortear
+    heroi_aleatorio = hero(nome_sorteado, idade_sorteada, tipo_sorteado)
+
+    print(f"Surgiu o herói {heroi_aleatorio.nome} (Idade: {heroi_aleatorio.idade})!")
+    heroi_aleatorio.ataque()
 
 
 
