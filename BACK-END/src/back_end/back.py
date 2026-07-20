@@ -18,11 +18,12 @@ def inserir_registros(con, cur, nome, email):
 
 def atualizar_registro(con, cur, nome, email, id):
     data = (nome, email, id)
-    cur.execute('UPDATE clientes SET nome=?, email=? WHERE id=?', data)
+    cur.execute('UPDATE clientes SET nome=?, email=? WHERE id=?;', data)
     con.commit()
 
 def deletar_registro(con, cur, id):
-    cur.execute('DELETE FROM clientes WHERE id=?', (id,))
+    data = (id,)
+    cur.execute('DELETE FROM clientes WHERE id=?;', data)
     con.commit
 
-deletar_registro(con, cur, 2)
+deletar_registro(con, cur, 1)
