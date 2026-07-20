@@ -3,9 +3,9 @@ from pathlib import Path
 
 ROOT_PATH = Path(__file__).parent # para cair o banco na mesma parta da conexão
 
-con = sqlite3.connect(ROOT_PATH /'meu_banco.db')# con é conexão
-
-cur = con.cursor() # cur é cursor só que abreviado
+# O "with" garante que a conexão será fechada ao sair do bloco
+with sqlite3.connect(ROOT_PATH / 'meu_banco.db') as con: # con é conexão
+    cur = con.cursor() # cur é cursor só que abreviado
 
 def criar_tabela(cur, con):
     cur.execute('CREATE TABLE clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nome VARCHAR(100), email VARCHAR(150))')
@@ -24,6 +24,6 @@ def atualizar_registro(con, cur, nome, email, id):
 def deletar_registro(con, cur, id):
     data = (id,)
     cur.execute('DELETE FROM clientes WHERE id=?;', data)
-    con.commit
+    con.commit()
 
-deletar_registro(con, cur, 1)
+inserir_registros(con, cur, 'PEDROA', 'pedroaaaah@outlook.com' )
