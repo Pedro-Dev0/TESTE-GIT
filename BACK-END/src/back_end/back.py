@@ -27,7 +27,7 @@ def deletar_registro(con, cur, id):
     con.commit()
 
 def inserir_muitos(con, cur, dados):
-    cur.executemany("INSERT INTO clientes (nome, email), VALUES (?,?)", dados)
+    cur.executemany("INSERT INTO clientes (nome, email) VALUES (?,?)", dados)
     con.commit()
 
 dados = [
