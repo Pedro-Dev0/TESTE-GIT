@@ -30,10 +30,27 @@ def inserir_muitos(con, cur, dados):
     cur.executemany("INSERT INTO clientes (nome, email) VALUES (?,?)", dados)
     con.commit()
 
-dados = [
+def visualizar_cliente(cur, id):
+    cur.execute("SELECT * FROM clientes WHERE id=?", (id,))
+    return cur.fetchone()
+
+def listar_clientes(cur):
+    cur.execute("SELECT * FROM clientes")
+    return cur.fetchall()
+
+cliente = visualizar_cliente(cur, 1)
+
+print(cliente)
+
+clientes = listar_clientes(cur)
+for usuario in clientes:
+    print(usuario)
+
+
+"""dados = [
     ("Guilherme", "guilherme@gmail.com"),
     ("Larissa", "larissa@gmail.com"),
     ("Vitoria", "vitoria@gmail.com"),
 ]
 
-inserir_muitos(con, cur, dados)
+inserir_muitos(con, cur, dados)"""
