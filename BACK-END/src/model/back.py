@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-ROOT_PATH = Path(__file__).parent  # para salvar o banco na mesma pasta do script
+ROOT_PATH = Path(__file__).parent  # salva o banco na mesma pasta do script
 
 
 def criar_tabela(cur, con):
