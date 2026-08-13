@@ -1,5 +1,5 @@
 [project]
-name = "auto"
+name = "diobank"
 version = "0.1.0"
 description = ""
 authors = [
@@ -8,11 +8,10 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pyautogui (>=0.9.54,<0.10.0)"
 ]
 
 [tool.poetry]
-packages = [{include = "auto", from = "src"}]
+packages = [{include = "diobank", from = "src"}]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
