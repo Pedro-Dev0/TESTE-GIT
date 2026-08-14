@@ -21,7 +21,7 @@ class Post:
     author_id: Mapped[int] = mapped_column(sa.ForeignKey('user.id'))
     created : Mapped[datetime] = mapped_column(sa.DateTime, default=sa.func.now())
     title: Mapped[str] = mapped_column(sa.String, nullable=False)
-    body : Mapped[str] = mapped_column(sa.String, nullable=False)
+    body: Mapped[str] = mapped_column(sa.String, nullable=False)
 
 @click.command('init-db')  #decorador @ açucar sintetico que transforma essa linha num comando de terminal chamado init-db
 def init_db_command():
