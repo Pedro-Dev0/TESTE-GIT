@@ -23,8 +23,6 @@ class Post:
     title: Mapped[str] = mapped_column(sa.String, nullable=False)
     body : Mapped[str] = mapped_column(sa.String, nullable=False)
 
-
-
 @click.command('init-db')  #decorador @ açucar sintetico que transforma essa linha num comando de terminal chamado init-db
 def init_db_command():
     global db
