@@ -57,4 +57,9 @@ def create_app(test_config=None):
     app.cli.add_command(init_db_command)
     db.init_app(app)
 
+    #registro de blueprint
+    from src.controllers import user_control
+
+    app.register_blueprint(user.app)
+
     return app
