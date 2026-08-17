@@ -60,6 +60,6 @@ def create_app(test_config=None):
     #registro de blueprint
     from src.controllers import user_control
 
-    app.register_blueprint(user.app)
+    app.register_blueprint(user_control.app)
 
     return app
