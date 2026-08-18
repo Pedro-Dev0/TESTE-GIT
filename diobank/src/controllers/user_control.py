@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from src import User, db
 from http import HTTPStatus
 
-app = Blueprint("user", __name__, url_prefix="/users") # sempre plural o url padrão RESTful
+app = Blueprint("user", __name__, url_prefix="/users") # sempre plural o url padrão RESTful só usado nome app para conexão, não tem nada a ver com o init
 
 def _create_user():
     data = request.json
@@ -21,11 +21,18 @@ def _list_users():
         for user in users
     ]
 
-@app.route('/', methods= ["GET", 'POST'])
+@app.route('/', methods= ["GET", "POST"])
 def handle_user():
     if request.method == "POST":
         _create_user()
         return {"message": "User created!"}, HTTPStatus.CREATED
     else:
         return {"users": _list_users()}
-    
+
+@app.route('/<int:user_id>')
+def get_user():
+    user = db.get_or_404(User, user_id)
+    return {
+        "id": user.id,
+        "username": user.username,
+    }
