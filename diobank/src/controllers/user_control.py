@@ -6,7 +6,7 @@ app = Blueprint('user', __name__, url_prefix='/users') # sempre plural o url pad
 
 def create_user():
     data = request.json
-    user(username=data['username'])
+    user = user(username=data['username'])
     db.session.add(user)
     db.session.commit()
 
