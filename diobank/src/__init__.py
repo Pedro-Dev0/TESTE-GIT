@@ -58,8 +58,10 @@ def create_app(test_config=None):
     db.init_app(app)
 
     #registro de blueprint
-    from src.controllers import user_control
+    from src.controllers import user_control # type: ignore
+    from src.controllers import post_control # type: ignore
 
     app.register_blueprint(user_control.app)
+    app.register_blueprint(post_control.app)
 
     return app
