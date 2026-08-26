@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from src import User, db
+from src import User, db  # type: ignore
 from http import HTTPStatus
 from sqlalchemy import inspect
 
