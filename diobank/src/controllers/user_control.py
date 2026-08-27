@@ -8,7 +8,11 @@ app = Blueprint("user", __name__, url_prefix="/users") # sempre plural o url pad
 
 def _create_user():
     data = request.json
-    user = User(username=data["username"])
+    user = User(
+        username=data["username"],
+        password=data["password"],
+        role_id=data["role_id"],
+    )
     db.session.add(user)
     db.session.commit()
 
