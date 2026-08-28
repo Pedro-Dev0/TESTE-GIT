@@ -35,9 +35,9 @@ def _list_users():
 @app.route('/', methods= ["GET", "POST"])
 @jwt_required()
 def list_or_create_user():
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     user = db.get_or_404(User, user_id)
-
+    
     if user.role.name != "admin":
         return {"msg": "User dont have access"}, HTTPStatus.FORBIDDEN
     

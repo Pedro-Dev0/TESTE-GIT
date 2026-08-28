@@ -76,14 +76,7 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    @jwt.user_identity_loader
-    def user_identity_lookup(user):
-        # Aqui você pode receber o objeto 'user' inteiro ou apenas o ID (depende do que você passar no login)
-        # Se você passar o objeto User ou o ID, garantimos que ele retorne uma string:
-        if hasattr(user, "id"):
-            return str(user.id)
-        return str(user)
-    # ----------------------
+   
     
     #registro de blueprint
     from src.controllers import user_control, post_control, auth, role # type: ignore
