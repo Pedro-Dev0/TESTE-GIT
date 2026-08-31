@@ -20,7 +20,7 @@ dependencies = [
 packages = [{include = "diobank", from = "src"}]
 
 [tool.pytest.ini_options]
-addopts = "-ra -q"
+addopts = "-ra -vvv"
 testpaths = ["tests"]
 
 [build-system]
