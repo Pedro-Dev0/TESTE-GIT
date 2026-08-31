@@ -3,6 +3,7 @@ from src import User, db  # type: ignore
 from http import HTTPStatus
 from sqlalchemy import inspect
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from src.utils import requires_role # type: ignore
 
 app = Blueprint("user", __name__, url_prefix="/users") # sempre plural o url padrão RESTful só usado nome app para conexão, não tem nada a ver com o init
 
@@ -34,13 +35,8 @@ def _list_users():
 
 @app.route('/', methods= ["GET", "POST"])
 @jwt_required()
+@requires_role("admin")
 def list_or_create_user():
-    user_id = get_jwt_identity()
-    user = db.get_or_404(User, user_id)
-    
-    if user.role.name != "admin":
-        return {"msg": "User dont have access"}, HTTPStatus.FORBIDDEN
-    
     if request.method == "POST":
         _create_user()
         return {"message": "User created!"}, HTTPStatus.CREATED
