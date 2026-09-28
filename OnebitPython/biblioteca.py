@@ -36,14 +36,28 @@ class Biblioteca:
 
         return texto
 
+    def remover_livro(self, titulo_para_remover):
+        for livro in self.livros:
+            if livro['titulo'] == titulo_para_remover:
+                self.livros.remove(livro)
+
+                return f"O livro '{titulo_para_remover}' foi removido da estante!"
+                
+        return f"Não foi possível remover: '{titulo_para_remover}'!"
+
+
 
 bib = Biblioteca("Biblioteca Municipal")
+
 print(bib.adicionar_livro("O PROCESSO", "FRANZ KAFKA"))
 print(bib.adicionar_livro("A METAMORFOSE", "FRANZ KAFKA"))
 print(bib.adicionar_livro("Harry Potter e a Pedra Filosofa", "J.K. ROWLING"))
+print(bib.adicionar_livro("Harry Potter e a Câmara Secreta", "J.K. ROWLING"))
 print(bib.listar_acervo())
 
 print(bib.buscar_livro('kafka'))
+print(bib.remover_livro('Harry Potter e a Pedra Filosofa'))
+print(bib.listar_acervo())
 
 
 
