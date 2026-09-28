@@ -30,11 +30,9 @@ class Biblioteca:
             return f"O livro não foi encontrado nas estantes da {self.nome}"
 
     def listar_acervo(self):
-        texto = (f"Acervo da {self.nome}:")
+        print(f"Acervo da {self.nome}:")
         for livro in self.livros:
-            texto += f"\n- {livro['titulo']} de {livro['autor']} -"
-
-        return texto
+            print(f"- {livro['titulo']} de {livro['autor']} -")
 
     def remover_livro(self, titulo_para_remover):
         for livro in self.livros:
@@ -53,11 +51,11 @@ print(bib.adicionar_livro("O PROCESSO", "FRANZ KAFKA"))
 print(bib.adicionar_livro("A METAMORFOSE", "FRANZ KAFKA"))
 print(bib.adicionar_livro("Harry Potter e a Pedra Filosofa", "J.K. ROWLING"))
 print(bib.adicionar_livro("Harry Potter e a Câmara Secreta", "J.K. ROWLING"))
-print(bib.listar_acervo())
+bib.listar_acervo()
 
 print(bib.buscar_livro('kafka'))
 print(bib.remover_livro('Harry Potter e a Pedra Filosofa'))
-print(bib.listar_acervo())
+bib.listar_acervo()
 
 
 
