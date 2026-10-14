@@ -1,4 +1,4 @@
-from portaria import GerenciadorPortaria
+from OnebitPython.desafios.Portaria.portaria import GerenciadorPortaria
 
 sistema = GerenciadorPortaria()
 
