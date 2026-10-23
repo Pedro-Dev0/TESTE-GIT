@@ -1,194 +1,1100 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Barbearia Davi</title>
-
-  <!-- ========================================== -->
-  <!-- CONFIGURAÇÕES DE PWA (TELA DO CELULAR)     -->
-  <!-- ========================================== -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="DaviBarber">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#09090b"> <!-- Cor preta no topo do celular -->
-  
-  <!-- Ícone que vai aparecer na tela do cliente -->
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3011/3011270.png">
-  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3011/3011270.png">
-
-  <!-- ========================================== -->
-  <!-- ESTILOS E FONTES                           -->
-  <!-- ========================================== -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Noctis AI — Analisador Financeiro & Investimentos Seguros (PC)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .esconder-scroll::-webkit-scrollbar { display: none; }
-    .esconder-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #050508;
+      color: #f8fafc;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+    }
+    .font-display { font-family: 'Cinzel', serif; }
+
+    .glass-panel {
+      background: rgba(14, 14, 22, 0.82);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.75);
+    }
+    .glass-card {
+      background: rgba(22, 22, 34, 0.65);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.2s ease;
+    }
+    .glass-card:hover { border-color: rgba(244, 63, 94, 0.35); }
+
+    @keyframes floatAvatar { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+    @keyframes spinSlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .anim-float { animation: floatAvatar 4s ease-in-out infinite; }
+    .anim-spin { animation: spinSlow 24s linear infinite; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #09090f; }
+    ::-webkit-scrollbar-thumb { background: rgba(244, 63, 94, 0.35); border-radius: 9999px; }
   </style>
 </head>
-<body class="bg-gray-100 antialiased flex justify-center sm:items-center min-h-screen">
+<body class="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-rose-950/25 via-[#07070c] to-[#030305]">
+  <div id="root"></div>
 
-  <div class="bg-gray-50 w-full sm:max-w-[400px] sm:h-[850px] sm:max-h-[90vh] sm:rounded-[2.5rem] sm:shadow-2xl overflow-hidden relative flex flex-col sm:border-[8px] sm:border-gray-900">
-    
-    <!-- TELA 1: AGENDAMENTO -->
-    <div id="tela-agendamento" class="flex flex-col h-full w-full">
-      <div class="bg-zinc-950 px-6 pt-12 pb-8 rounded-b-[2rem] shadow-lg z-10">
-        <h1 class="text-2xl font-extrabold text-white tracking-tight">Barbearia do Davi</h1>
-        <p class="text-zinc-400 text-sm mt-1 font-medium">Agendamento Rápido</p>
-      </div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
 
-      <div class="flex-1 overflow-y-auto esconder-scroll p-6 pb-32 space-y-8">
-        <div>
-          <h2 class="text-[1.1rem] font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span class="bg-zinc-200 text-zinc-800 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Escolha o Serviço
-          </h2>
-          <div class="flex flex-col gap-3">
-            <button onclick="selecionarServico('Corte Clássico', 35, this)" class="btn-servico touch-manipulation flex justify-between items-center p-4 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left">
-              <span class="font-semibold text-gray-800 text-lg">Corte Clássico</span>
-              <span class="font-extrabold text-zinc-900">R$ 35</span>
-            </button>
-            <button onclick="selecionarServico('Barba na Navalha', 25, this)" class="btn-servico touch-manipulation flex justify-between items-center p-4 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left">
-              <span class="font-semibold text-gray-800 text-lg">Barba na Navalha</span>
-              <span class="font-extrabold text-zinc-900">R$ 25</span>
-            </button>
-            <button onclick="selecionarServico('Combo (Corte + Barba)', 55, this)" class="btn-servico touch-manipulation flex justify-between items-center p-4 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left">
-              <span class="font-semibold text-gray-800 text-lg">Combo (Corte + Barba)</span>
-              <span class="font-extrabold text-zinc-900">R$ 55</span>
-            </button>
+    // 🔊 Efeitos Sonoros Suaves de UI
+    const playSound = (type, muted) => {
+      if (muted) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = ctx.currentTime;
+        const tone = (freq, start, dur, wave = 'sine', vol = 0.06) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = wave;
+          osc.frequency.setValueAtTime(freq, now + start);
+          gain.gain.setValueAtTime(vol, now + start);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + start);
+          osc.stop(now + start + dur);
+        };
+        if (type === 'coin') { tone(587.33, 0, 0.12); tone(880, 0.08, 0.25); }
+        else if (type === 'success') { tone(440, 0, 0.15); tone(659.25, 0.1, 0.3); }
+        else if (type === 'click') { tone(520, 0, 0.05); }
+      } catch (e) {}
+    };
+
+    // 🧠 Classificador NLP Automático de Gastos pelo Texto
+    const autoClassifyExpense = (description) => {
+      const text = description.toLowerCase();
+      const superfluous = ['ifood', 'delivery', 'lanche', 'pizza', 'bar', 'festa', 'jogo', 'game', 'skin', 'streaming', 'netflix', 'shopping', 'roupa', 'doce', 'cerveja', 'assinatura', 'impulso', 'uber eats'];
+      const essential = ['aluguel', 'condominio', 'condomínio', 'luz', 'energia', 'agua', 'água', 'internet', 'mercado', 'supermercado', 'feira', 'farmacia', 'farmácia', 'saude', 'saúde', 'faculdade', 'curso', 'imposto', 'iptu'];
+      if (superfluous.some(k => text.includes(k))) return 'Supérfluo';
+      if (essential.some(k => text.includes(k))) return 'Essencial';
+      return 'Variável';
+    };
+
+    // 🧛‍♂️ Avatar Estilizado do Mentor Noctis AI
+    function NoctisAvatar({ auraColor, isAnalyzing }) {
+      return (
+        <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full blur-xl opacity-50" style={{ background: `radial-gradient(circle, ${auraColor} 0%, transparent 70%)` }} />
+          <svg viewBox="0 0 140 140" className="absolute inset-0 w-full h-full anim-spin opacity-60">
+            <circle cx="70" cy="70" r="64" fill="none" stroke={auraColor} strokeWidth="1.5" strokeDasharray="14 10" />
+            <circle cx="70" cy="6" r="3" fill={auraColor} />
+          </svg>
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-white/15 anim-float shadow-2xl bg-[#090910]">
+            <svg viewBox="0 0 120 120" className="w-full h-full">
+              <circle cx="60" cy="52" r="34" fill={auraColor} opacity="0.2" />
+              <path d="M 15 120 L 28 74 L 45 92 L 60 85 L 75 92 L 92 74 L 105 120 Z" fill="#14141f" />
+              <path d="M 28 74 L 46 120 L 34 120 Z" fill={auraColor} opacity="0.85" />
+              <path d="M 92 74 L 74 120 L 86 120 Z" fill={auraColor} opacity="0.85" />
+              <polygon points="60,92 65,98 60,104 55,98" fill={auraColor} />
+              <path d="M 40 42 C 40 26 80 26 80 42 C 80 64 68 78 60 82 C 52 78 40 64 40 42 Z" fill="#e2e8f0" />
+              <path d="M 36 48 C 34 25 50 18 60 18 C 72 18 86 25 84 48 C 81 36 74 30 66 34 C 62 28 52 30 46 38 C 42 35 38 40 36 48 Z" fill="#1e293b" />
+              <path d="M 38 42 C 42 26 56 22 68 24 C 58 28 48 34 44 45 Z" fill="#f8fafc" opacity="0.85" />
+              <path d="M 45 51 Q 50 48 56 52 Q 50 55 45 51 Z" fill="#09090f" />
+              <circle cx="50.5" cy="51.5" r="2.4" fill={auraColor} />
+              <path d="M 64 52 Q 70 48 75 51 Q 70 55 64 52 Z" fill="#09090f" />
+              <circle cx="69.5" cy="51.5" r="2.4" fill={auraColor} />
+              {isAnalyzing ? (
+                <g>
+                  <path d="M 54 67 Q 60 72 66 67 Q 60 75 54 67 Z" fill="#881337" />
+                  <polygon points="56,68 57.5,71.5 59,68" fill="#ffffff" />
+                  <polygon points="61,68 62.5,71.5 64,68" fill="#ffffff" />
+                </g>
+              ) : (
+                <path d="M 55 68 Q 60 70.5 65 68" fill="none" stroke="#475569" strokeWidth="1.6" strokeLinecap="round" />
+              )}
+            </svg>
           </div>
         </div>
+      );
+    }
 
-        <div>
-          <h2 class="text-[1.1rem] font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span class="bg-zinc-200 text-zinc-800 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Horários de Hoje
-          </h2>
-          <div class="grid grid-cols-3 gap-3">
-            <button onclick="selecionarHorario('14:00', this)" class="btn-horario touch-manipulation py-3.5 rounded-xl font-bold border-2 border-transparent bg-white shadow-sm text-gray-500 active:scale-95 transition-all">14:00</button>
-            <button onclick="selecionarHorario('15:20', this)" class="btn-horario touch-manipulation py-3.5 rounded-xl font-bold border-2 border-transparent bg-white shadow-sm text-gray-500 active:scale-95 transition-all">15:20</button>
-            <button onclick="selecionarHorario('16:40', this)" class="btn-horario touch-manipulation py-3.5 rounded-xl font-bold border-2 border-transparent bg-white shadow-sm text-gray-500 active:scale-95 transition-all">16:40</button>
+    // 📊 Gráfico Dinâmico de Evolução e Projeção com Juros Seguros
+    function DynamicProjectionChart({ timelineData, activeGoal, formatBRL }) {
+      const maxDataVal = Math.max(
+        ...timelineData.map(d => Math.max(d.cumulativeCurrent, d.cumulativeAi)),
+        activeGoal?.targetAmount || 1000,
+        500
+      ) * 1.15;
+
+      const goalY = activeGoal
+        ? Math.max(18, Math.min(168, 170 - (activeGoal.targetAmount / maxDataVal) * 145))
+        : null;
+
+      return (
+        <div className="w-full">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 className="text-sm font-bold text-white">
+                📈 Curva de Acúmulo Patrimonial (Ritmo Atual vs. Otimizado pela IA + Rendimento CDI)
+              </h3>
+              <p className="text-xs text-zinc-400">
+                Começa do seu Mês 1 e projeta os próximos 5 meses somando seus aportes + rendimento seguro da Renda Fixa
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
+              <span className="flex items-center gap-1.5 text-amber-300">
+                <span className="w-3 h-2 rounded-sm bg-amber-400 inline-block" /> Acúmulo Atual
+              </span>
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <span className="w-3 h-2 rounded-sm bg-emerald-400 inline-block" /> Plano IA + Renda Fixa
+              </span>
+              {activeGoal && (
+                <span className="flex items-center gap-1.5 text-rose-400">
+                  <span className="w-3 h-0.5 border-t-2 border-dashed border-rose-500 inline-block" /> Marca: {activeGoal.title}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="relative w-full h-60 bg-zinc-950/80 rounded-2xl border border-white/10 p-4">
+            <svg viewBox="0 0 720 200" className="w-full h-full overflow-visible">
+              {[0, 0.25, 0.5, 0.75, 1].map((step, i) => {
+                const y = 170 - step * 145;
+                const val = Math.round(maxDataVal * step);
+                return (
+                  <g key={i}>
+                    <line x1="55" y1={y} x2="695" y2={y} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
+                    <text x="48" y={y + 3} textAnchor="end" fill="#71717a" fontSize="9" fontWeight="600">
+                      R$ {val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {activeGoal && goalY !== null && (
+                <g>
+                  <line x1="55" y1={goalY} x2="695" y2={goalY} stroke="#f43f5e" strokeWidth="1.8" strokeDasharray="6 4" />
+                  <rect x="550" y={goalY - 16} width="145" height="14" rx="4" fill="#881337" />
+                  <text x="622" y={goalY - 6} textAnchor="middle" fill="#fecdd3" fontSize="8.5" fontWeight="800">
+                    🎯 {activeGoal.title}: {formatBRL(activeGoal.targetAmount)}
+                  </text>
+                </g>
+              )}
+
+              {timelineData.map((item, idx) => {
+                const stepWidth = 620 / Math.max(1, timelineData.length);
+                const groupX = 75 + idx * stepWidth;
+                const curBarH = Math.max(3, (item.cumulativeCurrent / maxDataVal) * 145);
+                const aiBarH = Math.max(3, (item.cumulativeAi / maxDataVal) * 145);
+
+                return (
+                  <g key={idx}>
+                    <rect x={groupX - 14} y={170 - curBarH} width="13" height={curBarH} rx="3" fill={item.isCurrent || item.isHistory ? "#f59e0b" : "#f59e0b88"} />
+                    <rect x={groupX + 2} y={170 - aiBarH} width="13" height={aiBarH} rx="3" fill={item.isCurrent || item.isHistory ? "#10b981" : "#10b98199"} />
+                    <text x={groupX} y={Math.max(12, 165 - Math.max(curBarH, aiBarH))} textAnchor="middle" fill="#a7f3d0" fontSize="8.5" fontWeight="700">
+                      R${item.cumulativeAi >= 1000 ? `${(item.cumulativeAi / 1000).toFixed(1)}k` : item.cumulativeAi}
+                    </text>
+                    <text x={groupX} y="188" textAnchor="middle" fill={item.isCurrent ? "#fda4af" : "#a1a1aa"} fontSize="9.5" fontWeight={item.isCurrent ? "800" : "600"}>
+                      {item.label}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
           </div>
         </div>
-      </div>
+      );
+    }
 
-      <div class="absolute bottom-0 w-full bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-6 pb-6 px-6">
-        <button id="btn-confirmar" onclick="fazerAgendamento()" class="w-full bg-zinc-200 text-zinc-400 font-bold text-lg py-4 rounded-2xl shadow-lg transition-all flex justify-center items-center cursor-not-allowed" disabled>
-          Falta escolher
-        </button>
-      </div>
-    </div>
+    function App() {
+      const loadSaved = (k, def) => {
+        try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : def; } catch (e) { return def; }
+      };
 
-    <!-- TELA 2: SUCESSO -->
-    <div id="tela-sucesso" class="hidden flex-col h-full w-full bg-white">
-      <div class="bg-green-500 p-10 pt-20 flex flex-col items-center justify-center text-center rounded-b-[3rem] shadow-xl">
-        <div class="bg-white w-20 h-20 rounded-full flex items-center justify-center mb-5 shadow-2xl scale-110">
-          <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+      // Estados do Ciclo Financeiro (Começa Zerado no Mês 1)
+      const [currentMonthNum, setCurrentMonthNum] = useState(() => loadSaved('noctis_v3_month', 1));
+      const [closedMonths, setClosedMonths] = useState(() => loadSaved('noctis_v3_closed', []));
+      const [transactions, setTransactions] = useState(() => loadSaved('noctis_v3_txs', []));
+      const [goals, setGoals] = useState(() => loadSaved('noctis_v3_goals', [
+        { id: 1, title: 'Reserva de Emergência', targetAmount: 3000 }
+      ]));
+      const [selectedGoalId, setSelectedGoalId] = useState(1);
+      const [savingsGoalPct, setSavingsGoalPct] = useState(() => loadSaved('noctis_v3_pct', 20));
+
+      // Inputs Financeiros
+      const [txDesc, setTxDesc] = useState('');
+      const [txAmount, setTxAmount] = useState('');
+      const [txType, setTxType] = useState('income');
+      const [txCategory, setTxCategory] = useState('Essencial');
+      const [newGoalTitle, setNewGoalTitle] = useState('');
+      const [newGoalTarget, setNewGoalTarget] = useState('');
+
+      // Simulador de Investimentos Seguros
+      const [simHorizonMonths, setSimHorizonMonths] = useState(12); // 6, 12, 24, 36 meses
+
+      // Estados de Hábitos Financeiros
+      const [habits, setHabits] = useState(() => loadSaved('noctis_v3_habits', [
+        { id: 1, title: 'Separar o valor de investimento no dia do pagamento ("Pague-se Primeiro")', xp: 60, completed: false },
+        { id: 2, title: 'Anotar 100% dos gastos do dia e revisar supérfluos', xp: 45, completed: false },
+        { id: 3, title: 'Estudar 1h de Python / IA para aumentar minha renda ativa', xp: 55, completed: false }
+      ]));
+
+      // Estados da Chave API Gratuita do Google AI Studio
+      const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('noctis_v3_api_key') || '');
+      const [apiStatus, setApiStatus] = useState(() => localStorage.getItem('noctis_v3_api_key') ? 'configured' : 'none'); // 'none' | 'testing' | 'valid' | 'error'
+      const [apiStatusMsg, setApiStatusMsg] = useState('');
+      const [showApiWizard, setShowApiWizard] = useState(false);
+
+      // Navegação e Chat IA
+      const [activeTab, setActiveTab] = useState('ai_analyzer'); // Começa direto no Analisador IA & Configurador para te ajudar!
+      const [xp, setXp] = useState(() => loadSaved('noctis_v3_xp', 0));
+      const [level, setLevel] = useState(() => loadSaved('noctis_v3_lvl', 1));
+      const [muted, setMuted] = useState(false);
+      const [chatInput, setChatInput] = useState('');
+      const [isAiThinking, setIsAiThinking] = useState(false);
+      const [aiMessages, setAiMessages] = useState([
+        {
+          id: 1,
+          sender: 'ai',
+          text: 'Saudações! Sou Lorde Noctis, seu Analisador Financeiro e Mentor de Investimentos Seguros. Cole sua chave gratuita do Google AI Studio no painel ao lado (ou use meu motor analítico nativo) e clique em um dos botões de auditoria para eu te ensinar a cortar gastos e multiplicar sua grana guardada com segurança total!'
+        }
+      ]);
+      const chatEndRef = useRef(null);
+
+      useEffect(() => { localStorage.setItem('noctis_v3_month', JSON.stringify(currentMonthNum)); }, [currentMonthNum]);
+      useEffect(() => { localStorage.setItem('noctis_v3_closed', JSON.stringify(closedMonths)); }, [closedMonths]);
+      useEffect(() => { localStorage.setItem('noctis_v3_txs', JSON.stringify(transactions)); }, [transactions]);
+      useEffect(() => { localStorage.setItem('noctis_v3_goals', JSON.stringify(goals)); }, [goals]);
+      useEffect(() => { localStorage.setItem('noctis_v3_pct', JSON.stringify(savingsGoalPct)); }, [savingsGoalPct]);
+      useEffect(() => { localStorage.setItem('noctis_v3_habits', JSON.stringify(habits)); }, [habits]);
+
+      // 📊 CÁLCULOS FINANCEIROS EM TEMPO REAL
+      const currentIncome = transactions.filter(t => t.type === 'income').reduce((a, b) => a + b.amount, 0);
+      const currentExpense = transactions.filter(t => t.type === 'expense').reduce((a, b) => a + b.amount, 0);
+      const explicitSaved = transactions.filter(t => t.type === 'saved').reduce((a, b) => a + b.amount, 0);
+
+      const essentialExp = transactions.filter(t => t.type === 'expense' && t.category === 'Essencial').reduce((a, b) => a + b.amount, 0);
+      const variableExp = transactions.filter(t => t.type === 'expense' && t.category === 'Variável').reduce((a, b) => a + b.amount, 0);
+      const superfluousExp = transactions.filter(t => t.type === 'expense' && t.category === 'Supérfluo').reduce((a, b) => a + b.amount, 0);
+
+      const freeCashBalance = Math.max(0, currentIncome - currentExpense - explicitSaved);
+      const pastAccumulated = closedMonths.reduce((acc, m) => acc + m.saved, 0);
+      const totalSavedSoFar = pastAccumulated + explicitSaved;
+
+      // Quanto você junta hoje vs. Quanto pode juntar com os cortes da IA
+      const currentMonthlySavePace = explicitSaved > 0
+        ? explicitSaved + Math.round(freeCashBalance * 0.5)
+        : Math.max(0, currentIncome - currentExpense);
+
+      const aiCutSuperfluous = Math.round(superfluousExp * 0.5);
+      const aiCutVariable = Math.round(variableExp * 0.15);
+      const aiOptimizedMonthlySave = Math.max(
+        currentMonthlySavePace,
+        explicitSaved + freeCashBalance + aiCutSuperfluous + aiCutVariable,
+        Math.round((currentIncome * savingsGoalPct) / 100)
+      );
+
+      // 🛡️ CÁLCULO DE INVESTIMENTOS SEGUROS (Juros Compostos Mensais Reais)
+      // Taxas líquidas aproximadas mensais:
+      // 1. Poupança Comum: ~0,58% ao mês (isenta, mas perde p/ inflação/Selic)
+      // 2. Tesouro Selic / CDB 100% CDI (líquido de IR): ~0,86% ao mês
+      // 3. LCI / LCA 92% CDI ou CDB 110% CDI (isento de IR, garantido pelo FGC): ~0,94% ao mês
+      const calcCompoundGrowth = (initialPrincipal, monthlyContribution, monthlyRate, months) => {
+        let total = initialPrincipal;
+        for (let m = 1; m <= months; m++) {
+          total = total * (1 + monthlyRate) + monthlyContribution;
+        }
+        return Math.round(total);
+      };
+
+      const basePrincipal = totalSavedSoFar;
+      const monthlyDeposit = aiOptimizedMonthlySave > 0 ? aiOptimizedMonthlySave : 300; // Se estiver zerado, simula com R$ 300/mês para ensinar o usuário!
+      const totalInvestedOutOfPocket = basePrincipal + monthlyDeposit * simHorizonMonths;
+
+      const finalPoupanca = calcCompoundGrowth(basePrincipal, monthlyDeposit, 0.0058, simHorizonMonths);
+      const finalTesouroCdb = calcCompoundGrowth(basePrincipal, monthlyDeposit, 0.0086, simHorizonMonths);
+      const finalLciLca = calcCompoundGrowth(basePrincipal, monthlyDeposit, 0.0094, simHorizonMonths);
+
+      const yieldPoupanca = Math.max(0, finalPoupanca - totalInvestedOutOfPocket);
+      const yieldTesouroCdb = Math.max(0, finalTesouroCdb - totalInvestedOutOfPocket);
+      const yieldLciLca = Math.max(0, finalLciLca - totalInvestedOutOfPocket);
+
+      // Linha do Tempo para o Gráfico
+      const buildTimeline = () => {
+        const list = [];
+        let runCur = 0;
+        let runAi = 0;
+        closedMonths.forEach(m => {
+          runCur += m.saved;
+          runAi += m.saved;
+          list.push({ label: `Mês ${m.monthNum}`, cumulativeCurrent: Math.round(runCur), cumulativeAi: Math.round(runAi), isHistory: true, isCurrent: false });
+        });
+        runCur += currentMonthlySavePace;
+        runAi += aiOptimizedMonthlySave;
+        list.push({ label: `Mês ${currentMonthNum} (Atual)`, cumulativeCurrent: Math.round(runCur), cumulativeAi: Math.round(runAi), isHistory: false, isCurrent: true });
+
+        let projCur = runCur;
+        let projAi = runAi;
+        for (let i = 1; i <= 5; i++) {
+          projCur = projCur * 1.0086 + currentMonthlySavePace;
+          projAi = projAi * 1.0094 + aiOptimizedMonthlySave;
+          list.push({ label: `Mês +${i}`, cumulativeCurrent: Math.round(projCur), cumulativeAi: Math.round(projAi), isHistory: false, isCurrent: false });
+        }
+        return list;
+      };
+
+      const timelineData = buildTimeline();
+      const activeGoal = goals.find(g => g.id === selectedGoalId) || goals[0];
+      const formatBRL = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      // 🔌 FUNÇÃO PARA CHAMAR A CHAVE DE API DO GOOGLE GEMINI (Testa gemini-2.5-flash e gemini-1.5-flash automaticamente)
+      const callGeminiApi = async (keyToUse, promptText) => {
+        const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+        for (const modelName of models) {
+          try {
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${keyToUse.trim()}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: promptText }] }],
+                  generationConfig: { temperature: 0.65, maxOutputTokens: 650 }
+                })
+              }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) return { ok: true, text, model: modelName };
+            }
+          } catch (err) {
+            // Tenta o próximo modelo da lista em caso de falha
+          }
+        }
+        return { ok: false, text: null };
+      };
+
+      // Testar se a Chave API está funcionando de verdade
+      const handleTestApiKey = async () => {
+        if (!geminiKey.trim()) {
+          setApiStatus('error');
+          setApiStatusMsg('Cole uma chave começando com AIzaSy... antes de testar.');
+          return;
+        }
+        setApiStatus('testing');
+        setApiStatusMsg('Conectando aos servidores do Google AI Studio...');
+        localStorage.setItem('noctis_v3_api_key', geminiKey.trim());
+
+        const result = await callGeminiApi(
+          geminiKey,
+          'Responda apenas com uma frase curta em português como Lorde Noctis confirmando que a conexão da chave API para análise financeira está ativa.'
+        );
+
+        if (result.ok) {
+          playSound('success', muted);
+          setApiStatus('valid');
+          setApiStatusMsg(`Chave validada com sucesso no modelo ${result.model}!`);
+          setAiMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: `🟢 Conexão API Confirmada (${result.model}): ${result.text}` }]);
+        } else {
+          setApiStatus('error');
+          setApiStatusMsg('Não foi possível validar a chave. Verifique se copiou sem espaços do Google AI Studio (aistudio.google.com). O motor local continuará funcionando normalmente!');
+        }
+      };
+
+      // 🧠 GERADOR LOCAL DE ANÁLISE FINANCEIRA E INVESTIMENTOS SEGUROS (Funciona mesmo sem internet/API)
+      const generateExpertLocalAnalysis = (topic) => {
+        const t = topic.toLowerCase();
+        if (t.includes('invest') || t.includes('multiplicar') || t.includes('segur') || t.includes('renda fixa') || t.includes('selic') || t.includes('cdb')) {
+          return `🛡️ GUIA DE INVESTIMENTOS SEGUROS PARA SUA GRANA (${formatBRL(totalSavedSoFar)} guardados + potencial de ${formatBRL(monthlyDeposit)}/mês):
+1️⃣ 1º Passo — Reserva de Liquidez Diária (Segurança Máxima): Coloque os primeiros valores no **Tesouro Selic** (garantido pelo Tesouro Nacional) ou em um **CDB de Liquidez Diária que pague 100% do CDI** em um banco sólido (protegido pelo **FGC** até R$ 250 mil). Nunca deixe parado na conta corrente ou na Poupança antiga!
+2️⃣ 2º Passo — Aceleração Isenta de Imposto (LCI e LCA): Para o dinheiro que você não vai precisar pelos próximos 9 a 12 meses, aplique em **LCI ou LCA (90% a 95% do CDI)**. Como são isentas de Imposto de Renda para pessoa física e têm garantia do FGC, elas rendem mais que um CDB comum!
+3️⃣ Resultado Prático: Em ${simHorizonMonths} meses aportando ${formatBRL(monthlyDeposit)}/mês, você acumulará **${formatBRL(finalLciLca)}** (ganhando **+${formatBRL(yieldLciLca)} só de juros seguros**, contra apenas ${formatBRL(yieldPoupanca)} na Poupança!).`;
+        }
+
+        if (t.includes('poupar') || t.includes('corte') || t.includes('economizar') || t.includes('gast')) {
+          if (currentIncome === 0 && currentExpense === 0) {
+            return `💡 MÉTODO NOCTIS PARA POUPAR DINHEIRO (Comece lançando seus dados ou clique em "Carregar Exemplo"):
+1️⃣ Regra "Pague-se Primeiro": No dia em que o salário cair, transfira imediatamente ${savingsGoalPct}% para o seu CDB/Tesouro Selic antes de pagar qualquer conta variável.
+2️⃣ Teto de Supérfluos (Regra dos 50%): Nunca corte 100% do lazer (isso gera efeito rebote). Corte exatamente metade dos gastos com Delivery, lanches e compras por impulso e envie essa diferença direto para a sua Marca!`;
+          }
+          return `🔍 RAIO-X DE COMO POUPAR MAIS NESTE MÊS:
+• Sua renda atual é de **${formatBRL(currentIncome)}** e seus gastos somam **${formatBRL(currentExpense)}**.
+• Detectei **${formatBRL(superfluousExp)}** em gastos Supérfluos e **${formatBRL(variableExp)}** em Variáveis.
+• Ação Imediata: Se você reduzir metade dos supérfluos (**+${formatBRL(aiCutSuperfluous)}**) e 15% dos variáveis (**+${formatBRL(aiCutVariable)}**), somando ao seu saldo livre (**${formatBRL(freeCashBalance)}**), você conseguirá guardar **${formatBRL(aiOptimizedMonthlySave)} todos os meses**!`;
+        }
+
+        return `📊 DIAGNÓSTICO PATRIMONIAL COMPLETO:
+• Guardado atualmente: **${formatBRL(totalSavedSoFar)}** | Potencial mensal otimizado: **${formatBRL(aiOptimizedMonthlySave)}/mês**.
+• Para proteger e multiplicar esse valor com risco baixíssimo, divida seus aportes entre **Tesouro Selic / CDB 100% CDI** (para reserva imediata) e **LCI/LCA** (para metas de médio prazo sem pagar Imposto de Renda).`;
+      };
+
+      // Disparar Consulta para o Analisador Financeiro (Usa a Chave Gemini API se válida + Injeção Completa de Contexto!)
+      const askFinancialAnalyzer = async (customQuestion) => {
+        const question = customQuestion || chatInput;
+        if (!question.trim() || isAiThinking) return;
+
+        playSound('click', muted);
+        setAiMessages(prev => [...prev, { id: Date.now(), sender: 'user', text: question }]);
+        if (!customQuestion) setChatInput('');
+        setIsAiThinking(true);
+
+        // Monta o Prompt de Engenharia Financeira com todos os dados reais do usuário
+        const systemPrompt = `Você é Lorde Noctis, um Analisador Financeiro Pessoal e Mentor de Investimentos Seguros no Brasil.
+DADOS REAIS DO USUÁRIO NESTE MÊS (Mês ${currentMonthNum}):
+- Ganhos Totais: ${formatBRL(currentIncome)}
+- Gastos Totais: ${formatBRL(currentExpense)} (Essenciais: ${formatBRL(essentialExp)}, Variáveis: ${formatBRL(variableExp)}, Supérfluos: ${formatBRL(superfluousExp)})
+- Total Já Guardado no Cofre: ${formatBRL(totalSavedSoFar)}
+- Saldo Livre na Conta: ${formatBRL(freeCashBalance)}
+- Potencial Mensal Otimizado Calculado: ${formatBRL(aiOptimizedMonthlySave)}/mês
+- Marca / Meta Alvo: "${activeGoal?.title}" de ${formatBRL(activeGoal?.targetAmount)}
+- Lista de Lançamentos Recentes: ${transactions.slice(0, 8).map(t => `${t.desc} (${t.category}: R$${t.amount})`).join(', ') || 'Ainda sem lançamentos'}
+
+SUA MISSÃO:
+1. Analise os números reais acima e ensine o usuário de forma prática como poupar dinheiro (apontando onde cortar nos gastos variáveis/supérfluos).
+2. Dê dicas de investimentos 100% SEGUROS no Brasil (Tesouro Selic, CDB 100% CDI com garantia do FGC, LCI/LCA isentas de IR, Tesouro IPCA+) explicando como fazer a grana guardada render juros compostos com segurança.
+3. Responda em português, de forma clara, estruturada em tópicos curtos e motivadora.
+
+PERGUNTA DO USUÁRIO: ${question}`;
+
+        let finalAnswer = '';
+        if (geminiKey.trim()) {
+          const apiRes = await callGeminiApi(geminiKey, systemPrompt);
+          if (apiRes.ok) {
+            finalAnswer = apiRes.text;
+            setApiStatus('valid');
+          } else {
+            finalAnswer = generateExpertLocalAnalysis(question);
+          }
+        } else {
+          await new Promise(r => setTimeout(r, 500));
+          finalAnswer = generateExpertLocalAnalysis(question);
+        }
+
+        playSound('success', muted);
+        setAiMessages(prev => [...prev, { id: Date.now() + 1, sender: 'ai', text: finalAnswer }]);
+        setIsAiThinking(false);
+        setXp(p => p + 20);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      };
+
+      const handleAddTransaction = (e) => {
+        e.preventDefault();
+        const num = parseFloat(String(txAmount).replace(',', '.'));
+        if (!txDesc.trim() || isNaN(num) || num <= 0) return;
+
+        playSound('coin', muted);
+        const cat = txType === 'income' ? 'Renda' : txType === 'saved' ? 'Cofre' : txCategory;
+        setTransactions(prev => [{ id: Date.now(), desc: txDesc.trim(), amount: num, type: txType, category: cat }, ...prev]);
+        setXp(p => p + 25);
+        setTxDesc('');
+        setTxAmount('');
+      };
+
+      const handleLoadDemo = () => {
+        playSound('success', muted);
+        setTransactions([
+          { id: 1, desc: 'Salário Mensal TI', amount: 4200, type: 'income', category: 'Renda' },
+          { id: 2, desc: 'Aluguel + Condomínio + Luz', amount: 1550, type: 'expense', category: 'Essencial' },
+          { id: 3, desc: 'Supermercado & Feira', amount: 680, type: 'expense', category: 'Essencial' },
+          { id: 4, desc: 'Uber & Transporte', amount: 290, type: 'expense', category: 'Variável' },
+          { id: 5, desc: 'iFood, Delivery & Lanches', amount: 540, type: 'expense', category: 'Supérfluo' },
+          { id: 6, desc: 'Assinaturas & Compras Impulso', amount: 220, type: 'expense', category: 'Supérfluo' },
+          { id: 7, desc: 'Aporte Inicial no Cofre Selic', amount: 600, type: 'saved', category: 'Cofre' }
+        ]);
+      };
+
+      return (
+        <div className="min-h-screen w-full flex flex-col lg:flex-row">
+          
+          {/* SIDEBAR ESQUERDA (WORKSTATION PC) */}
+          <aside className="w-full lg:w-72 glass-panel border-r border-white/10 p-5 flex flex-col justify-between shrink-0">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="font-display text-lg font-extrabold tracking-wider text-white flex items-center gap-2">
+                    <span className="text-rose-500">♦</span> NOCTIS AI
+                  </h1>
+                  <p className="text-[11px] text-zinc-400">Analisador Financeiro & Renda Fixa</p>
+                </div>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  Mês {currentMonthNum}
+                </span>
+              </div>
+
+              {/* Avatar + Status da Chave API */}
+              <div className="glass-card rounded-2xl p-4 text-center">
+                <NoctisAvatar auraColor="#f43f5e" isAnalyzing={isAiThinking} />
+                <div className="mt-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full inline-block ${
+                    apiStatus === 'valid'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  }`}>
+                    {apiStatus === 'valid' ? '🟢 Gemini API Conectada' : '🧠 Modo Analítico Pronto'}
+                  </span>
+                  <p className="text-xs text-zinc-300 mt-2">
+                    Potencial p/ Investir: <strong className="text-emerald-400">{formatBRL(aiOptimizedMonthlySave)}/mês</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Menu Principal */}
+              <nav className="space-y-1.5">
+                {[
+                  { id: 'ai_analyzer', label: 'Analisador IA & API Key', icon: '🧠', desc: 'Configurar chave e pedir mentoria' },
+                  { id: 'safe_invest', label: 'Investimentos Seguros', icon: '🛡️', desc: 'Simulador Selic, CDB e LCI/LCA' },
+                  { id: 'dashboard', label: 'Livro Caixa & Projeções', icon: '📊', desc: 'Lançar ganhos, gastos e marcas' },
+                  { id: 'habits', label: 'Hábitos de Riqueza', icon: '🎯', desc: 'Rituais diários de economia' }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { playSound('click', muted); setActiveTab(item.id); }}
+                    className={`w-full text-left p-3 rounded-2xl transition-all flex items-center gap-3 ${
+                      activeTab === item.id
+                        ? 'bg-gradient-to-r from-rose-600 to-rose-800 text-white shadow-lg border border-rose-400/30'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <div>
+                      <div className="text-xs font-bold">{item.label}</div>
+                      <div className={`text-[10px] ${activeTab === item.id ? 'text-rose-100' : 'text-zinc-500'}`}>{item.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </nav>
+
+              {/* Atalhos de Demonstração e Ciclo */}
+              <div className="glass-card p-3.5 rounded-2xl space-y-2">
+                <span className="text-[10px] font-bold uppercase text-zinc-400 block">Ações Rápidas de Dados</span>
+                <button
+                  onClick={handleLoadDemo}
+                  className="w-full py-2 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition"
+                >
+                  🧪 Preencher Dados de Exemplo
+                </button>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={() => {
+                      if (transactions.length === 0) return;
+                      setClosedMonths([...closedMonths, { monthNum: currentMonthNum, income: currentIncome, expense: currentExpense, saved: currentMonthlySavePace }]);
+                      setCurrentMonthNum(m => m + 1);
+                      setTransactions([]);
+                    }}
+                    className="py-1.5 px-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 text-[10px] font-semibold"
+                  >
+                    📅 Fechar Mês
+                  </button>
+                  <button
+                    onClick={() => { setTransactions([]); setClosedMonths([]); setCurrentMonthNum(1); }}
+                    className="py-1.5 px-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[10px] font-semibold"
+                  >
+                    🗑️ Zerar Tudo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setShowApiWizard(!showApiWizard)}
+                className="flex-1 glass-card py-2 px-3 rounded-xl text-xs font-bold text-amber-300 hover:text-white text-center"
+              >
+                🔑 Configurar API Key
+              </button>
+              <button onClick={() => setMuted(!muted)} className="glass-card py-2 px-3 rounded-xl text-xs font-bold text-zinc-300">
+                {muted ? '🔇' : '🔊'}
+              </button>
+            </div>
+          </aside>
+
+          {/* ÁREA PRINCIPAL DE TRABALHO */}
+          <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            
+            {/* TOPBAR */}
+            <header className="glass-panel border-b border-white/10 px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30">
+              <div>
+                <h2 className="text-base font-extrabold text-white">
+                  {activeTab === 'ai_analyzer' && '🧠 Analisador Financeiro IA & Configurador da Chave Gratuita'}
+                  {activeTab === 'safe_invest' && '🛡️ Simulador de Investimentos Seguros (Multiplicador de Grana Guardada)'}
+                  {activeTab === 'dashboard' && '📊 Livro Caixa, Marcas & Gráfico de Projeção a Partir do Uso'}
+                  {activeTab === 'habits' && '🎯 Rituais Diários de Educação Financeira & Carreira'}
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Grana Guardada: <strong className="text-amber-300">{formatBRL(totalSavedSoFar)}</strong> • Potencial c/ Cortes da IA: <strong className="text-emerald-400">{formatBRL(aiOptimizedMonthlySave)}/mês</strong>
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowApiWizard(!showApiWizard)}
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold transition"
+                >
+                  🔑 {apiStatus === 'valid' ? 'Chave API Ativa ✓' : 'Colar & Testar API Key'}
+                </button>
+              </div>
+            </header>
+
+            {/* PAINEL EXPANSÍVEL PARA CONFIGURAR E TESTAR A CHAVE DE API GRATUITA */}
+            {showApiWizard && (
+              <div className="bg-zinc-900/95 border-b border-amber-500/40 px-6 py-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-xs font-extrabold text-amber-300 uppercase tracking-wider">
+                      🔑 Conectar Chave Gratuita do Google AI Studio (Gemini API)
+                    </h3>
+                    <p className="text-xs text-zinc-400">
+                      1. Acesse <a href="https://aistudio.google.com/" target="_blank" className="text-rose-400 underline font-bold">aistudio.google.com</a> → 2. Clique em "Get API Key" → 3. Cole abaixo e clique em "Testar Conexão".
+                    </p>
+                  </div>
+                  <button onClick={() => setShowApiWizard(false)} className="text-xs text-zinc-400 hover:text-white">Fechar ✕</button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    type="password"
+                    placeholder="Cole sua chave aqui (Ex: AIzaSyB...)"
+                    value={geminiKey}
+                    onChange={e => setGeminiKey(e.target.value)}
+                    className="flex-1 min-w-[260px] bg-zinc-950 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                  />
+                  <button
+                    onClick={handleTestApiKey}
+                    disabled={apiStatus === 'testing'}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition"
+                  >
+                    {apiStatus === 'testing' ? 'Testando...' : '⚡ Testar Conexão API'}
+                  </button>
+                </div>
+
+                {apiStatusMsg && (
+                  <div className={`text-xs font-semibold px-3 py-2 rounded-xl border ${
+                    apiStatus === 'valid'
+                      ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                      : apiStatus === 'error'
+                      ? 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+                      : 'bg-zinc-800 border-white/10 text-zinc-300'
+                  }`}>
+                    {apiStatusMsg}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="p-6 space-y-6 max-w-7xl w-full mx-auto">
+              
+              {/* 4 KPI CARDS NO TOPO */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="glass-card p-4 rounded-2xl border-l-4 border-l-emerald-500">
+                  <span className="text-xs font-bold text-zinc-400 uppercase">Ganhos no Mês {currentMonthNum}</span>
+                  <div className="text-2xl font-extrabold text-white mt-1">{formatBRL(currentIncome)}</div>
+                  <p className="text-[11px] text-zinc-400 mt-1">Gastos totais: {formatBRL(currentExpense)}</p>
+                </div>
+
+                <div className="glass-card p-4 rounded-2xl border-l-4 border-l-rose-500">
+                  <span className="text-xs font-bold text-zinc-400 uppercase">Margem de Corte (IA)</span>
+                  <div className="text-2xl font-extrabold text-rose-400 mt-1">+{formatBRL(aiCutSuperfluous + aiCutVariable)}</div>
+                  <p className="text-[11px] text-zinc-400 mt-1">50% dos supérfluos + 15% variáveis</p>
+                </div>
+
+                <div className="glass-card p-4 rounded-2xl border-l-4 border-l-amber-400">
+                  <span className="text-xs font-bold text-zinc-400 uppercase">Potencial p/ Guardar</span>
+                  <div className="text-2xl font-extrabold text-amber-300 mt-1">{formatBRL(aiOptimizedMonthlySave)}<span className="text-xs font-normal">/mês</span></div>
+                  <p className="text-[11px] text-zinc-400 mt-1">Já guardado no cofre: {formatBRL(totalSavedSoFar)}</p>
+                </div>
+
+                <div className="glass-card p-4 rounded-2xl border-l-4 border-l-teal-400 bg-gradient-to-br from-teal-950/30 to-zinc-900/70">
+                  <span className="text-xs font-bold text-teal-300 uppercase">Projeção Renda Fixa ({simHorizonMonths}m)</span>
+                  <div className="text-2xl font-extrabold text-emerald-400 mt-1">{formatBRL(finalLciLca)}</div>
+                  <p className="text-[11px] text-teal-200 mt-1">Lucro de juros seguros: +{formatBRL(yieldLciLca)}</p>
+                </div>
+              </div>
+
+              {/* ABA 1: ANALISADOR IA & MENTOR DE POUPANÇA / INVESTIMENTOS */}
+              {activeTab === 'ai_analyzer' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  
+                  {/* Coluna Esquerda (5 col): Painel de Comandos do Analisador + Resumo de Cortes */}
+                  <div className="lg:col-span-5 space-y-5">
+                    <div className="glass-card p-5 rounded-3xl space-y-3 border border-rose-500/25">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300">
+                        Motor de Análise Ativo
+                      </span>
+                      <h3 className="text-sm font-bold text-white">
+                        🎯 Comandos de Consultoria para sua Chave API
+                      </h3>
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        Clique em qualquer módulo abaixo. O aplicativo enviará automaticamente seus ganhos, gastos e saldo guardado para a IA montar seu plano:
+                      </p>
+
+                      <div className="space-y-2 pt-1">
+                        {[
+                          {
+                            title: '🛡️ Onde Investir Minha Grana com Segurança?',
+                            sub: 'Compara Tesouro Selic, CDB 100% CDI (FGC) e LCI/LCA',
+                            prompt: 'Tenho dinheiro guardado e quero investir com segurança total no Brasil. Me explique passo a passo onde colocar minha reserva (Tesouro Selic, CDB com FGC, LCI/LCA) e quanto meu dinheiro vai render.'
+                          },
+                          {
+                            title: '✂️ Analisar Meus Gastos e Ensinar a Poupar',
+                            sub: 'Mostra onde cortar sem perder qualidade de vida',
+                            prompt: 'Analise meus ganhos e gastos deste mês, aponte onde estou perdendo dinheiro com supérfluos e me dê um plano prático para poupar mais toda semana.'
+                          },
+                          {
+                            title: '📈 Plano de Multiplicação em 12 Meses',
+                            sub: 'Estratégia de juros compostos mês a mês',
+                            prompt: 'Monte uma estratégia de 12 meses usando juros compostos da Renda Fixa segura para eu multiplicar minha grana guardada e bater minha marca financeira.'
+                          },
+                          {
+                            title: '🐍 Como Aumentar Renda com Python & IA',
+                            sub: 'Ideias práticas para aportar mais todo mês',
+                            prompt: 'Além de poupar e investir em renda fixa, como posso usar meus estudos de Python e IA para gerar renda extra e aumentar meus aportes mensais?'
+                          }
+                        ].map((btn, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => askFinancialAnalyzer(btn.prompt)}
+                            className="w-full text-left p-3 rounded-2xl bg-zinc-950/80 hover:bg-rose-950/30 border border-white/10 hover:border-rose-500/40 transition group"
+                          >
+                            <div className="text-xs font-bold text-white group-hover:text-rose-300">{btn.title}</div>
+                            <div className="text-[11px] text-zinc-400 mt-0.5">{btn.sub}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Resumo Rápido dos 3 Pilares Seguros do Brasil */}
+                    <div className="glass-card p-5 rounded-3xl space-y-3">
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-emerald-400">
+                        📚 Os 3 Investimentos Mais Seguros do Brasil
+                      </h4>
+                      <div className="space-y-2 text-xs">
+                        <div className="p-2.5 rounded-xl bg-zinc-950/70 border border-white/5">
+                          <strong className="text-white">1. Tesouro Selic (Risco Soberano):</strong>
+                          <p className="text-zinc-400 text-[11px] mt-0.5">Garantido 100% pelo Governo Federal. Rende a taxa Selic diária e você pode resgatar quando quiser sem perder nada.</p>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-zinc-950/70 border border-white/5">
+                          <strong className="text-white">2. CDB 100% CDI de Liquidez Diária:</strong>
+                          <p className="text-zinc-400 text-[11px] mt-0.5">Protegido pelo FGC (Fundo Garantidor de Créditos) até R$ 250 mil por CPF. Rende muito mais que a poupança todos os dias úteis.</p>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-zinc-950/70 border border-white/5">
+                          <strong className="text-white">3. LCI / LCA (Isentas de Imposto de Renda):</strong>
+                          <p className="text-zinc-400 text-[11px] mt-0.5">Também protegidas pelo FGC e com 0% de desconto de Imposto de Renda sobre o lucro para pessoa física.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Coluna Direita (7 col): Console do Analisador Financeiro IA */}
+                  <div className="lg:col-span-7 glass-card p-5 rounded-3xl flex flex-col h-[580px]">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <div>
+                        <h3 className="text-sm font-bold text-white">💬 Console do Analisador Financeiro Noctis AI</h3>
+                        <p className="text-xs text-zinc-400">
+                          A IA lê automaticamente seus lançamentos ({transactions.length} registros no Mês {currentMonthNum}) antes de responder
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowApiWizard(true)}
+                        className="text-xs font-bold px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-amber-300 border border-amber-500/30"
+                      >
+                        {apiStatus === 'valid' ? '🟢 Gemini Conectado' : '🔑 Configurar Chave'}
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-2">
+                      {aiMessages.map(m => (
+                        <div
+                          key={m.id}
+                          className={`p-4 rounded-2xl text-xs leading-relaxed whitespace-pre-line max-w-2xl ${
+                            m.sender === 'ai'
+                              ? 'bg-zinc-950/90 border border-rose-500/30 text-zinc-200 mr-auto'
+                              : 'bg-gradient-to-r from-rose-600 to-rose-700 text-white ml-auto'
+                          }`}
+                        >
+                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 mb-1">
+                            {m.sender === 'ai' ? '🧛 Lorde Noctis — Analisador Financeiro' : 'Você'}
+                          </div>
+                          <div>{m.text}</div>
+                        </div>
+                      ))}
+                      {isAiThinking && (
+                        <div className="text-xs text-emerald-400 animate-pulse font-semibold p-2">
+                          ⚡ Noctis AI está auditando seus lançamentos e calculando os rendimentos seguros...
+                        </div>
+                      )}
+                      <div ref={chatEndRef} />
+                    </div>
+
+                    <form
+                      onSubmit={e => { e.preventDefault(); askFinancialAnalyzer(); }}
+                      className="pt-3 border-t border-white/10 flex gap-2"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Pergunte como poupar mais ou onde investir sua grana guardada..."
+                        value={chatInput}
+                        onChange={e => setChatInput(e.target.value)}
+                        className="flex-1 bg-zinc-950 border border-white/15 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
+                      />
+                      <button
+                        type="submit"
+                        className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition"
+                      >
+                        Analisar
+                      </button>
+                    </form>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ABA 2: SIMULADOR DE INVESTIMENTOS SEGUROS (MULTIPLICADOR DE GRANA GUARDADA) */}
+              {activeTab === 'safe_invest' && (
+                <div className="space-y-6">
+                  <div className="glass-card p-6 rounded-3xl space-y-5">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-base font-extrabold text-white">
+                          🛡️ Simulador de Renda Fixa Segura: Quanto Sua Grana Guardada Vai Render?
+                        </h3>
+                        <p className="text-xs text-zinc-400">
+                          Cálculo real baseado no seu saldo guardado ({formatBRL(basePrincipal)}) + aporte mensal de {formatBRL(monthlyDeposit)}/mês
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded-xl border border-white/10">
+                        <span className="text-xs font-bold text-zinc-400 px-2">Prazo:</span>
+                        {[6, 12, 24, 36].map(m => (
+                          <button
+                            key={m}
+                            onClick={() => setSimHorizonMonths(m)}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                              simHorizonMonths === m ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            {m} meses
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Comparativo das 3 Opções Seguras */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-5 rounded-2xl bg-zinc-950/80 border border-white/10 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-zinc-400 uppercase">1. Poupança Antiga</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">~0,58% a.m.</span>
+                        </div>
+                        <div className="text-2xl font-extrabold text-zinc-200">{formatBRL(finalPoupanca)}</div>
+                        <div className="text-xs text-zinc-400">
+                          Total saído do bolso: {formatBRL(totalInvestedOutOfPocket)}<br />
+                          <strong className="text-amber-300">Rendimento de Juros: +{formatBRL(yieldPoupanca)}</strong>
+                        </div>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-zinc-950/90 border border-sky-500/40 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-sky-400 uppercase">2. Tesouro Selic / CDB 100%</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">Liquidez Diária</span>
+                        </div>
+                        <div className="text-2xl font-extrabold text-white">{formatBRL(finalTesouroCdb)}</div>
+                        <div className="text-xs text-zinc-300">
+                          Garantia FGC / Tesouro Nacional<br />
+                          <strong className="text-sky-300">Rendimento Líquido: +{formatBRL(yieldTesouroCdb)}</strong>
+                        </div>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/60 to-zinc-950 border-2 border-emerald-500/50 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-emerald-300 uppercase">3. LCI / LCA (Isento de IR)</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">Maior Retorno</span>
+                        </div>
+                        <div className="text-2xl font-extrabold text-emerald-400">{formatBRL(finalLciLca)}</div>
+                        <div className="text-xs text-emerald-100/90">
+                          Zero Imposto de Renda + Proteção FGC<br />
+                          <strong className="text-emerald-300">Rendimento Livre: +{formatBRL(yieldLciLca)} (+{formatBRL(yieldLciLca - yieldPoupanca)} vs Poupança!)</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ABA 3: LIVRO CAIXA, MARCAS & GRÁFICO DE PROJEÇÃO */}
+              {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                  <div className="glass-card p-5 rounded-3xl">
+                    <DynamicProjectionChart timelineData={timelineData} activeGoal={activeGoal} formatBRL={formatBRL} />
+
+                    {/* Criador de Marcas */}
+                    <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-zinc-300">🎯 Marcas Ativas:</span>
+                        {goals.map(g => (
+                          <button
+                            key={g.id}
+                            onClick={() => setSelectedGoalId(g.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                              selectedGoalId === g.id ? 'bg-rose-600 text-white border-rose-400' : 'bg-zinc-900 text-zinc-400 border-white/10'
+                            }`}
+                          >
+                            {g.title}: {formatBRL(g.targetAmount)}
+                          </button>
+                        ))}
+                      </div>
+
+                      <form
+                        onSubmit={e => {
+                          e.preventDefault();
+                          const val = parseFloat(String(newGoalTarget).replace(',', '.'));
+                          if (!newGoalTitle.trim() || isNaN(val) || val <= 0) return;
+                          const ng = { id: Date.now(), title: newGoalTitle.trim(), targetAmount: val };
+                          setGoals([...goals, ng]);
+                          setSelectedGoalId(ng.id);
+                          setNewGoalTitle('');
+                          setNewGoalTarget('');
+                        }}
+                        className="flex gap-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Nova Marca..."
+                          value={newGoalTitle}
+                          onChange={e => setNewGoalTitle(e.target.value)}
+                          className="bg-zinc-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
+                        />
+                        <input
+                          type="number"
+                          placeholder="R$ Valor"
+                          value={newGoalTarget}
+                          onChange={e => setNewGoalTarget(e.target.value)}
+                          className="w-28 bg-zinc-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
+                        />
+                        <button type="submit" className="bg-rose-600 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl">
+                          + Marca
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+
+                  {/* Lançamento + Lista */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="glass-card p-5 rounded-3xl space-y-3">
+                      <h3 className="text-sm font-bold text-white">➕ Registrar Ganho, Gasto ou Poupança</h3>
+                      <form onSubmit={handleAddTransaction} className="space-y-3">
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {[
+                            { id: 'income', label: '+ Ganhei', cls: 'bg-emerald-600 text-white' },
+                            { id: 'expense', label: '- Gastei', cls: 'bg-rose-600 text-white' },
+                            { id: 'saved', label: '♦ Guardei', cls: 'bg-amber-500 text-zinc-950' }
+                          ].map(b => (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => setTxType(b.id)}
+                              className={`py-2 rounded-xl text-xs font-bold ${txType === b.id ? b.cls : 'bg-zinc-900 text-zinc-400'}`}
+                            >
+                              {b.label}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Descrição (Ex: Salário, iFood, Aluguel...)"
+                          value={txDesc}
+                          onChange={e => {
+                            setTxDesc(e.target.value);
+                            if (txType === 'expense') setTxCategory(autoClassifyExpense(e.target.value));
+                          }}
+                          className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white"
+                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="R$ Valor"
+                            value={txAmount}
+                            onChange={e => setTxAmount(e.target.value)}
+                            className="flex-1 bg-zinc-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white"
+                          />
+                          {txType === 'expense' && (
+                            <select
+                              value={txCategory}
+                              onChange={e => setTxCategory(e.target.value)}
+                              className="bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                            >
+                              <option value="Essencial">Essencial</option>
+                              <option value="Variável">Variável</option>
+                              <option value="Supérfluo">Supérfluo</option>
+                            </select>
+                          )}
+                          <button type="submit" className="bg-rose-600 text-white font-bold text-xs px-5 py-2 rounded-xl">
+                            Salvar
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+
+                    <div className="glass-card p-5 rounded-3xl max-h-72 overflow-y-auto space-y-2">
+                      <h3 className="text-sm font-bold text-white mb-2">📑 Lançamentos do Mês {currentMonthNum}</h3>
+                      {transactions.length === 0 ? (
+                        <p className="text-xs text-zinc-500 py-8 text-center">Nenhum lançamento ainda. Adicione ao lado ou clique em "Preencher Dados de Exemplo" na barra lateral!</p>
+                      ) : (
+                        transactions.map(tx => (
+                          <div key={tx.id} className="p-2.5 rounded-xl bg-zinc-950 border border-white/5 flex justify-between items-center">
+                            <div>
+                              <span className="text-xs font-bold text-white block">{tx.desc}</span>
+                              <span className="text-[10px] text-zinc-400">{tx.category}</span>
+                            </div>
+                            <span className={`text-xs font-extrabold ${tx.type === 'expense' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              {tx.type === 'expense' ? '-' : '+'}{formatBRL(tx.amount)}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ABA 4: HÁBITOS DE RIQUEZA */}
+              {activeTab === 'habits' && (
+                <div className="glass-card p-5 rounded-3xl space-y-3">
+                  <h3 className="text-sm font-bold text-white">🎯 Rituais Diários para Acumular Patrimônio</h3>
+                  {habits.map(h => (
+                    <div key={h.id} className="p-3.5 rounded-2xl bg-zinc-950 border border-white/10 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => {
+                            playSound('success', muted);
+                            setHabits(habits.map(i => i.id === h.id ? { ...i, completed: !i.completed } : i));
+                            if (!h.completed) setXp(p => p + h.xp);
+                          }}
+                          className={`w-9 h-9 rounded-xl font-bold text-xs ${h.completed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}
+                        >
+                          {h.completed ? '✓' : '♦'}
+                        </button>
+                        <span className={`text-xs font-bold ${h.completed ? 'line-through text-zinc-500' : 'text-white'}`}>{h.title}</span>
+                      </div>
+                      <span className="text-xs font-bold text-rose-400">+{h.xp} XP</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            </div>
+          </main>
         </div>
-        <h1 class="text-3xl font-extrabold text-white tracking-tight">Agendado!</h1>
-      </div>
-      <div class="p-6 flex-1 flex flex-col justify-center">
-        <button onclick="mudarTela('tela-admin')" class="w-full bg-zinc-950 hover:bg-black text-white text-lg font-bold py-4 rounded-2xl shadow-xl active:scale-95 transition-all animate-bounce">
-          Acessar Painel do Davi
-        </button>
-      </div>
-    </div>
+      );
+    }
 
-    <!-- TELA 3: ADMIN -->
-    <div id="tela-admin" class="hidden flex-col h-full w-full bg-gray-50 relative">
-      <div class="bg-zinc-950 p-6 pt-12 rounded-b-[2rem] shadow-lg z-10 flex justify-between items-center">
-        <div>
-          <p class="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-1">Painel de Controle</p>
-          <h1 class="text-2xl font-extrabold text-white" id="titulo-admin">Sua Agenda</h1>
-        </div>
-        <button onclick="mudarTela('tela-agendamento')" class="bg-zinc-800 text-white p-3 rounded-full shadow-md active:scale-90 transition-all">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        </button>
-      </div>
-
-      <!-- ABA AGENDA -->
-      <div id="aba-agenda" class="flex-1 overflow-y-auto esconder-scroll p-4 pb-28 space-y-4"></div>
-
-      <!-- ABA DASHBOARD -->
-      <div id="aba-dashboard" class="hidden flex-1 overflow-y-auto esconder-scroll p-6 pb-28 space-y-6">
-        <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100 relative overflow-hidden">
-          <p class="text-sm text-gray-500 font-bold mb-1">Ganhos de Hoje</p>
-          <h3 class="text-4xl font-extrabold text-green-500" id="dash-lucro-diario">R$ 0,00</h3>
-        </div>
-        <div class="bg-zinc-950 rounded-[1.5rem] p-6 shadow-xl relative overflow-hidden">
-          <p class="text-sm text-zinc-400 font-bold mb-1">Acumulado do Mês</p>
-          <h3 class="text-4xl font-extrabold text-white mb-3" id="dash-lucro-mensal">R$ 0,00</h3>
-        </div>
-      </div>
-
-      <!-- NAV INFERIOR -->
-      <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 flex justify-around px-2 pt-3 pb-8 sm:pb-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-3xl z-20">
-        <button onclick="alternarAbaAdmin('agenda')" id="btn-nav-agenda" class="flex flex-col items-center p-2 text-zinc-950 active:scale-90 transition-all">
-          <svg class="w-7 h-7 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>
-          <span class="text-[11px] font-bold">Agenda</span>
-        </button>
-        <button onclick="alternarAbaAdmin('dashboard')" id="btn-nav-dash" class="flex flex-col items-center p-2 text-gray-300 hover:text-zinc-950 active:scale-90 transition-all">
-          <svg class="w-7 h-7 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11V3H8v6H2v12h20V11h-6zm-6-6h4v14h-4V5zm-6 6h4v8H4v-8zm16 8h-4v-6h4v6z"/></svg>
-          <span class="text-[11px] font-bold">Finanças</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let servicoEscolhido = null, precoEscolhido = 0, horarioEscolhido = null, nomeCliente = "";
-    let agendaBancoDeDados = [{ hora: '09:00', nome: 'Marcos Paulo', servico: 'Corte Clássico', valor: 35, status: 'passado' }, { hora: '10:30', nome: 'Lucas Ferreira', servico: 'Barba na Navalha', valor: 25, status: 'passado' }];
-
-    function selecionarServico(nome, preco, botao) {
-      servicoEscolhido = nome; precoEscolhido = preco;
-      document.querySelectorAll('.btn-servico').forEach(btn => btn.className = 'btn-servico touch-manipulation flex justify-between items-center p-4 rounded-2xl border-2 border-transparent bg-white shadow-sm active:scale-[0.98] transition-all text-left');
-      botao.className = 'btn-servico touch-manipulation flex justify-between items-center p-4 rounded-2xl border-2 border-zinc-950 bg-zinc-50 shadow-md active:scale-[0.98] transition-all text-left scale-[1.02]';
-      verificarSePodeAgendar();
-    }
-    function selecionarHorario(hora, botao) {
-      horarioEscolhido = hora;
-      document.querySelectorAll('.btn-horario').forEach(btn => btn.className = 'btn-horario touch-manipulation py-3.5 rounded-xl font-bold border-2 border-transparent bg-white shadow-sm text-gray-500 active:scale-95 transition-all');
-      botao.className = 'btn-horario touch-manipulation py-3.5 rounded-xl font-bold border-2 border-zinc-950 bg-zinc-950 text-white active:scale-95 transition-all shadow-md scale-105';
-      verificarSePodeAgendar();
-    }
-    function verificarSePodeAgendar() {
-      const btn = document.getElementById('btn-confirmar');
-      if (servicoEscolhido && horarioEscolhido) {
-        btn.disabled = false; btn.innerHTML = `Confirmar ${horarioEscolhido}`;
-        btn.className = 'w-full bg-zinc-950 text-white font-extrabold text-lg py-4 rounded-2xl shadow-xl shadow-zinc-900/30 active:scale-95 transition-all flex justify-center items-center cursor-pointer';
-      }
-    }
-    function fazerAgendamento() {
-      nomeCliente = prompt("Digite seu nome (Simulação):"); if (!nomeCliente) return;
-      agendaBancoDeDados.push({ hora: horarioEscolhido, nome: nomeCliente, servico: servicoEscolhido, valor: precoEscolhido, status: 'novo' });
-      agendaBancoDeDados.sort((a, b) => a.hora.localeCompare(b.hora));
-      mudarTela('tela-sucesso');
-    }
-    function atualizarDadosAdmin() {
-      let totalDiario = 0; const lista = document.getElementById('aba-agenda'); lista.innerHTML = ''; 
-      agendaBancoDeDados.forEach(item => {
-        totalDiario += item.valor; let ehNovo = item.status === 'novo';
-        let bgClass = ehNovo ? 'bg-white border-2 border-green-500 shadow-lg scale-[1.02] z-10' : 'bg-white border border-gray-100 shadow-sm opacity-90';
-        let badge = ehNovo ? `<div class="absolute -top-3 -right-2 bg-green-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md animate-pulse">Novo</div>` : '';
-        lista.innerHTML += `<div class="flex items-center gap-4 p-4 rounded-2xl ${bgClass} relative transition-all">${badge}<div class="text-center w-14 border-r-2 border-gray-100 pr-3 py-2"><p class="text-xl font-extrabold text-zinc-900">${item.hora}</p></div><div class="flex-1 pl-1"><p class="font-bold text-gray-900 text-lg">${item.nome}</p><p class="text-xs text-gray-500 font-semibold mt-1">${item.servico}</p></div><div class="text-right bg-gray-50 px-3 py-2 rounded-xl border border-gray-100"><p class="font-extrabold text-green-600 text-sm">R$ ${item.valor}</p></div></div>`;
-      });
-      document.getElementById('dash-lucro-diario').innerText = `R$ ${totalDiario},00`;
-      document.getElementById('dash-lucro-mensal').innerText = `R$ ${(3850 + totalDiario).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    }
-    function alternarAbaAdmin(aba) {
-      document.getElementById('aba-agenda').classList.add('hidden'); document.getElementById('aba-dashboard').classList.add('hidden');
-      document.getElementById('btn-nav-agenda').classList.replace('text-zinc-950', 'text-gray-300'); document.getElementById('btn-nav-dash').classList.replace('text-zinc-950', 'text-gray-300');
-      if (aba === 'agenda') { document.getElementById('aba-agenda').classList.remove('hidden'); document.getElementById('btn-nav-agenda').classList.replace('text-gray-300', 'text-zinc-950'); document.getElementById('titulo-admin').innerText = 'Sua Agenda'; } 
-      else { document.getElementById('aba-dashboard').classList.remove('hidden'); document.getElementById('btn-nav-dash').classList.replace('text-gray-300', 'text-zinc-950'); document.getElementById('titulo-admin').innerText = 'Seu Financeiro'; }
-    }
-    function mudarTela(telaId) {
-      document.getElementById('tela-agendamento').classList.add('hidden'); document.getElementById('tela-agendamento').classList.remove('flex');
-      document.getElementById('tela-sucesso').classList.add('hidden'); document.getElementById('tela-sucesso').classList.remove('flex');
-      document.getElementById('tela-admin').classList.add('hidden'); document.getElementById('tela-admin').classList.remove('flex');
-      if (telaId === 'tela-admin') { atualizarDadosAdmin(); alternarAbaAdmin('agenda'); }
-      document.getElementById(telaId).classList.remove('hidden'); document.getElementById(telaId).classList.add('flex');
-    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
 </html>

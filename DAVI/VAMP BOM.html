@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Noctis AI — Workstation Executiva (PC Edition)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #050508;
+      color: #f8fafc;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+    }
+
+    .font-display { font-family: 'Cinzel', serif; }
+
+    .glass-panel {
+      background: rgba(15, 15, 23, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    }
+
+    .glass-card {
+      background: rgba(24, 24, 36, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.25s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+
+    @keyframes floatAvatar {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes spinSlow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.06); }
+    }
+
+    .anim-float { animation: floatAvatar 4s ease-in-out infinite; }
+    .anim-spin { animation: spinSlow 22s linear infinite; }
+    .anim-glow { animation: pulseGlow 3.5s ease-in-out infinite; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #09090f; }
+    ::-webkit-scrollbar-thumb { background: rgba(244, 63, 94, 0.35); border-radius: 9999px; }
+  </style>
+</head>
+<body class="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-rose-950/25 via-[#07070c] to-[#030305]">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // 🔊 Sintetizador de Áudio UI
+    const playUiSound = (type, muted) => {
+      if (muted) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = ctx.currentTime;
+        const tone = (freq, start, dur, wave = 'sine', vol = 0.07) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = wave;
+          osc.frequency.setValueAtTime(freq, now + start);
+          gain.gain.setValueAtTime(vol, now + start);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + start);
+          osc.stop(now + start + dur);
+        };
+        if (type === 'success') {
+          tone(330, 0, 0.2);
+          tone(493.88, 0.08, 0.25);
+          tone(659.25, 0.16, 0.35);
+        } else if (type === 'coin') {
+          tone(587.33, 0, 0.12);
+          tone(880, 0.08, 0.28);
+        } else if (type === 'click') {
+          tone(520, 0, 0.06, 'sine', 0.04);
+        } else if (type === 'ai') {
+          tone(440, 0, 0.15, 'triangle', 0.08);
+          tone(659.25, 0.1, 0.25, 'sine', 0.08);
+        }
+      } catch (e) {}
+    };
+
+    // 🧛‍♂️ Avatar Moderno Estilizado do Lorde Noctis (Sidebar PC)
+    function NoctisAvatarWidget({ state, auraColor, eyeOffset, isBlinking, onInteract }) {
+      return (
+        <div onClick={onInteract} className="relative w-28 h-28 mx-auto flex items-center justify-center cursor-pointer group">
+          <div
+            className="absolute inset-0 rounded-full blur-xl anim-glow"
+            style={{ background: `radial-gradient(circle, ${auraColor}55 0%, transparent 70%)` }}
+          />
+          <svg viewBox="0 0 140 140" className="absolute inset-0 w-full h-full anim-spin opacity-60">
+            <circle cx="70" cy="70" r="64" fill="none" stroke={auraColor} strokeWidth="1.5" strokeDasharray="16 10" />
+            <circle cx="70" cy="6" r="3" fill={auraColor} />
+          </svg>
+
+          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-white/15 group-hover:border-rose-500/60 transition-all anim-float shadow-2xl bg-[#090910]">
+            <svg viewBox="0 0 120 120" className="w-full h-full">
+              <circle cx="60" cy="52" r="36" fill={auraColor} opacity="0.2" />
+              <circle cx="60" cy="52" r="28" fill="#09090f" />
+              {/* Gola Imperial */}
+              <path d="M 15 120 L 28 74 L 45 92 L 60 85 L 75 92 L 92 74 L 105 120 Z" fill="#14141f" />
+              <path d="M 28 74 L 46 120 L 34 120 Z" fill={auraColor} opacity="0.85" />
+              <path d="M 92 74 L 74 120 L 86 120 Z" fill={auraColor} opacity="0.85" />
+              <polygon points="60,92 65,98 60,104 55,98" fill={auraColor} />
+              {/* Rosto & Cabelo Prateado */}
+              <path d="M 40 42 C 40 26 80 26 80 42 C 80 64 68 78 60 82 C 52 78 40 64 40 42 Z" fill="#e2e8f0" />
+              <path d="M 36 48 C 34 25 50 18 60 18 C 72 18 86 25 84 48 C 81 36 74 30 66 34 C 62 28 52 30 46 38 C 42 35 38 40 36 48 Z" fill="#1e293b" />
+              <path d="M 38 42 C 42 26 56 22 68 24 C 58 28 48 34 44 45 Z" fill="#f8fafc" opacity="0.85" />
+              {/* Olhos Rubi */}
+              <g transform={`translate(${eyeOffset.x}, ${eyeOffset.y})`}>
+                {isBlinking ? (
+                  <>
+                    <line x1="46" y1="52" x2="55" y2="52" stroke="#0f172a" strokeWidth="2" />
+                    <line x1="65" y1="52" x2="74" y2="52" stroke="#0f172a" strokeWidth="2" />
+                  </>
+                ) : (
+                  <>
+                    <path d="M 45 51 Q 50 48 56 52 Q 50 55 45 51 Z" fill="#09090f" />
+                    <circle cx="50.5" cy="51.5" r="2.3" fill={auraColor} />
+                    <path d="M 64 52 Q 70 48 75 51 Q 70 55 64 52 Z" fill="#09090f" />
+                    <circle cx="69.5" cy="51.5" r="2.3" fill={auraColor} />
+                  </>
+                )}
+                {state === 'analyze' ? (
+                  <g>
+                    <path d="M 54 67 Q 60 72 66 67 Q 60 75 54 67 Z" fill="#881337" />
+                    <polygon points="56,68 57.5,71.5 59,68" fill="#ffffff" />
+                    <polygon points="61,68 62.5,71.5 64,68" fill="#ffffff" />
+                  </g>
+                ) : (
+                  <path d="M 55 68 Q 60 70.5 65 68" fill="none" stroke="#475569" strokeWidth="1.6" strokeLinecap="round" />
+                )}
+              </g>
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    // 📊 Gráfico SVG Multi-Meses Interativo (Meses Anteriores, Mês Atual e Projeção IA)
+    function MultiMonthChart({ monthsData, selectedMonthIdx, onSelectMonth, formatBRL }) {
+      const maxVal = Math.max(...monthsData.map(m => Math.max(m.income, m.expense, m.saved)), 1000) * 1.15;
+
+      return (
+        <div className="w-full">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>📈 Evolução Mensal Comparativa (Histórico & Projeção IA)</span>
+              </h3>
+              <p className="text-xs text-zinc-400">Clique em qualquer mês no gráfico para inspecionar os detalhes daquele período</p>
+            </div>
+            <div className="flex items-center gap-4 text-xs font-semibold">
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block" /> Ganhos
+              </span>
+              <span className="flex items-center gap-1.5 text-rose-400">
+                <span className="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block" /> Gastos
+              </span>
+              <span className="flex items-center gap-1.5 text-amber-300">
+                <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block" /> Guardado
+              </span>
+            </div>
+          </div>
+
+          {/* Área Gráfica SVG Responsiva */}
+          <div className="relative w-full h-64 bg-zinc-950/70 rounded-2xl border border-white/5 p-4 flex flex-col justify-between">
+            <svg viewBox="0 0 700 200" className="w-full h-full overflow-visible">
+              {/* Linhas Guia Horizontais */}
+              {[0, 0.25, 0.5, 0.75, 1].map((step, idx) => {
+                const y = 170 - step * 145;
+                const labelVal = Math.round(maxVal * step);
+                return (
+                  <g key={idx}>
+                    <line x1="45" y1={y} x2="680" y2={y} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
+                    <text x="40" y={y + 3} textAnchor="end" fill="#71717a" fontSize="9" fontWeight="600">
+                      R${(labelVal / 1000).toFixed(1)}k
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Linha de Tendência de Poupança Acumulada */}
+              <polyline
+                fill="none"
+                stroke="#fbbf24"
+                strokeWidth="2"
+                strokeDasharray="4 2"
+                points={monthsData
+                  .map((m, idx) => {
+                    const x = 90 + idx * 88;
+                    const y = 170 - (m.saved / maxVal) * 145;
+                    return `${x},${y}`;
+                  })
+                  .join(' ')}
+              />
+
+              {/* Colunas de Cada Mês */}
+              {monthsData.map((m, idx) => {
+                const groupX = 65 + idx * 88;
+                const incH = Math.max(4, (m.income / maxVal) * 145);
+                const expH = Math.max(4, (m.expense / maxVal) * 145);
+                const savH = Math.max(4, (m.saved / maxVal) * 145);
+                const isSelected = selectedMonthIdx === idx;
+
+                return (
+                  <g
+                    key={m.month}
+                    onClick={() => onSelectMonth(idx)}
+                    className="cursor-pointer group"
+                  >
+                    {/* Fundo de Seleção do Mês */}
+                    <rect
+                      x={groupX - 10}
+                      y="12"
+                      width="70"
+                      height="180"
+                      rx="10"
+                      fill={isSelected ? "rgba(244, 63, 94, 0.12)" : "transparent"}
+                      stroke={isSelected ? "rgba(244, 63, 94, 0.45)" : "transparent"}
+                      className="transition-all group-hover:fill-white/5"
+                    />
+
+                    {/* Barra Ganhos (Verde) */}
+                    <rect
+                      x={groupX}
+                      y={170 - incH}
+                      width="14"
+                      height={incH}
+                      rx="3"
+                      fill={m.isProjection ? "#10b98188" : "#10b981"}
+                    />
+
+                    {/* Barra Gastos (Rosa/Vermelho) */}
+                    <rect
+                      x={groupX + 18}
+                      y={170 - expH}
+                      width="14"
+                      height={expH}
+                      rx="3"
+                      fill={m.isProjection ? "#f43f5e88" : "#f43f5e"}
+                    />
+
+                    {/* Barra Guardado (Ouro) */}
+                    <rect
+                      x={groupX + 36}
+                      y={170 - savH}
+                      width="14"
+                      height={savH}
+                      rx="3"
+                      fill={m.isProjection ? "#fbbf2488" : "#fbbf24"}
+                    />
+
+                    {/* Ponto da Linha de Poupança */}
+                    <circle
+                      cx={groupX + 25}
+                      cy={170 - savH}
+                      r="3.5"
+                      fill="#fef08a"
+                      stroke="#78350f"
+                      strokeWidth="1.5"
+                    />
+
+                    {/* Nome do Mês */}
+                    <text
+                      x={groupX + 25}
+                      y="188"
+                      textAnchor="middle"
+                      fill={isSelected ? "#ffffff" : m.isCurrent ? "#fda4af" : "#a1a1aa"}
+                      fontSize="10"
+                      fontWeight={isSelected || m.isCurrent ? "800" : "600"}
+                    >
+                      {m.short}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      // Estados Globais
+      const [xp, setXp] = useState(210);
+      const [level, setLevel] = useState(3);
+      const [rubies, setRubies] = useState(145);
+      const [streak, setStreak] = useState(12);
+      const [vampState, setVampState] = useState('idle');
+      const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' | 'ai_advisor' | 'finances' | 'habits'
+      const [auraColor, setAuraColor] = useState('#f43f5e');
+      const [muted, setMuted] = useState(false);
+      const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
+      const [isBlinking, setIsBlinking] = useState(false);
+
+      // Meta percentual escolhida pelo usuário
+      const [savingsGoalPct, setSavingsGoalPct] = useState(20);
+
+      // Transações Detalhadas do Mês Atual (Outubro) com Categorias para a IA Analisar
+      const [transactions, setTransactions] = useState([
+        { id: 1, desc: 'Salário / Remuneração Principal', amount: 4200, type: 'income', category: 'Renda', date: '05/Out' },
+        { id: 2, desc: 'Freelance de Automação Python', amount: 800, type: 'income', category: 'Renda Extra', date: '12/Out' },
+        { id: 3, desc: 'Aluguel + Condomínio + Internet', amount: 1650, type: 'expense', category: 'Essencial', date: '10/Out' },
+        { id: 4, desc: 'Supermercado & Feira Mensal', amount: 680, type: 'expense', category: 'Essencial', date: '14/Out' },
+        { id: 5, desc: 'Transporte & Combustível', amount: 340, type: 'expense', category: 'Variável', date: '16/Out' },
+        { id: 6, desc: 'Delivery, Ifood & Jantares Fora', amount: 520, type: 'expense', category: 'Supérfluo', date: '19/Out' },
+        { id: 7, desc: 'Assinaturas & Compras por Impulso', amount: 290, type: 'expense', category: 'Supérfluo', date: '21/Out' },
+        { id: 8, desc: 'Aporte no Cofre (Tesouro / CDI)', amount: 750, type: 'saved', category: 'Investimento', date: '22/Out' },
+      ]);
+      const [txDesc, setTxDesc] = useState('');
+      const [txAmount, setTxAmount] = useState('');
+      const [txType, setTxType] = useState('expense');
+      const [txCategory, setTxCategory] = useState('Essencial');
+
+      // Cálculos em Tempo Real do Mês Atual (Outubro)
+      const currentIncome = transactions.filter(t => t.type === 'income').reduce((a, b) => a + b.amount, 0);
+      const currentExpense = transactions.filter(t => t.type === 'expense').reduce((a, b) => a + b.amount, 0);
+      const currentSaved = transactions.filter(t => t.type === 'saved').reduce((a, b) => a + b.amount, 0);
+
+      // Separação inteligente por natureza de gasto para a IA diagnosticar quanto pode ser juntado
+      const essentialExpenses = transactions
+        .filter(t => t.type === 'expense' && t.category === 'Essencial')
+        .reduce((a, b) => a + b.amount, 0);
+      const variableExpenses = transactions
+        .filter(t => t.type === 'expense' && t.category === 'Variável')
+        .reduce((a, b) => a + b.amount, 0);
+      const superfluousExpenses = transactions
+        .filter(t => t.type === 'expense' && t.category === 'Supérfluo')
+        .reduce((a, b) => a + b.amount, 0);
+
+      // 🧠 CÁLCULOS DA IA: QUANTO PODE SER JUNTADO
+      // 1. Meta Escolhida (ex: 20% da renda)
+      const targetSavingsByRule = Math.round((currentIncome * savingsGoalPct) / 100);
+      // 2. Sobras reais não alocadas no caixa atual
+      const unallocatedCash = Math.max(0, currentIncome - currentExpense - currentSaved);
+      // 3. Potencial de Otimização IA (Reduzindo 50% dos supérfluos + 15% dos variáveis + sobras atuais)
+      const potentialCutSuperfluous = Math.round(superfluousExpenses * 0.5);
+      const potentialCutVariable = Math.round(variableExpenses * 0.15);
+      const aiMaxSavePotential = currentSaved + unallocatedCash + potentialCutSuperfluous + potentialCutVariable;
+      const aiExtraGain = Math.max(0, aiMaxSavePotential - currentSaved);
+      // 4. Projeção de Patrimônio em 12 meses com juros compostos (~0.9% a.m.)
+      const projected12MonthsOptimized = Math.round(aiMaxSavePotential * 12.68);
+      const projected12MonthsCurrent = Math.round(currentSaved * 12.68);
+
+      // Histórico de Meses Anteriores + Mês Atual + Projeção IA para o próximo mês
+      const monthsHistory = [
+        { month: 'Maio 2026', short: 'Mai', income: 4200, expense: 3650, saved: 400, isCurrent: false, isProjection: false },
+        { month: 'Junho 2026', short: 'Jun', income: 4350, expense: 3400, saved: 550, isCurrent: false, isProjection: false },
+        { month: 'Julho 2026', short: 'Jul', income: 4200, expense: 3780, saved: 350, isCurrent: false, isProjection: false },
+        { month: 'Agosto 2026', short: 'Ago', income: 4600, expense: 3500, saved: 650, isCurrent: false, isProjection: false },
+        { month: 'Setembro 2026', short: 'Set', income: 4500, expense: 3450, saved: 700, isCurrent: false, isProjection: false },
+        { month: 'Outubro 2026 (Atual)', short: 'Out*', income: currentIncome, expense: currentExpense, saved: currentSaved, isCurrent: true, isProjection: false },
+        {
+          month: 'Novembro 2026 (Projeção IA)',
+          short: 'Nov (IA)',
+          income: currentIncome,
+          expense: Math.max(essentialExpenses, currentExpense - potentialCutSuperfluous - potentialCutVariable),
+          saved: aiMaxSavePotential,
+          isCurrent: false,
+          isProjection: true
+        }
+      ];
+      const [selectedMonthIdx, setSelectedMonthIdx] = useState(5); // Outubro selecionado por padrão
+      const inspectedMonth = monthsHistory[selectedMonthIdx] || monthsHistory[5];
+
+      // Hábitos e Rituais Diários
+      const [habits, setHabits] = useState([
+        { id: 1, title: 'Estudar Engenharia de IA & Python (1h)', category: 'Carreira', xp: 60, rubies: 35, completed: true },
+        { id: 2, title: 'Revisar Gastos Supérfluos no Dashboard', category: 'Finanças', xp: 45, rubies: 25, completed: false },
+        { id: 3, title: 'Desenvolver Prova de Conceito (PoC) no VS Code', category: 'Projetos TI', xp: 70, rubies: 40, completed: false },
+        { id: 4, title: 'Treino Físico & Hidratação (2L Água)', category: 'Saúde', xp: 40, rubies: 20, completed: true }
+      ]);
+      const [newHabitTitle, setNewHabitTitle] = useState('');
+      const [newHabitCat, setNewHabitCat] = useState('Projetos TI');
+
+      // Estado do Consultor de IA (Chat + Relatórios)
+      const [geminiKey, setGeminiKey] = useState('');
+      const [showApiModal, setShowApiModal] = useState(false);
+      const [chatInput, setChatInput] = useState('');
+      const [isAiLoading, setIsAiLoading] = useState(false);
+      const [aiChat, setAiChat] = useState([
+        {
+          id: 1,
+          sender: 'ai',
+          text: 'Bem-vindo à sua Workstation Executiva para PC. Já processei seu histórico de Maio a Outubro e identifiquei exatamente quanto você pode acumular otimizando suas despesas variáveis e supérfluas. Confira os cartões de diagnóstico ou me faça uma pergunta.'
+        }
+      ]);
+      const chatEndRef = useRef(null);
+
+      const formatBRL = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setIsBlinking(true);
+          setTimeout(() => setIsBlinking(false), 160);
+        }, 3500);
+        return () => clearInterval(timer);
+      }, []);
+
+      const handleMouseMove = (e) => {
+        const x = Math.max(-2.5, Math.min(2.5, (e.clientX - 180) / 120));
+        const y = Math.max(-2, Math.min(2, (e.clientY - 180) / 120));
+        setEyeOffset({ x, y });
+      };
+
+      // 💡 GERADOR AUTOMÁTICO DE DICAS DE GESTÃO DA IA (Baseado nos números reais do usuário)
+      const essentialPct = currentIncome > 0 ? Math.round((essentialExpenses / currentIncome) * 100) : 0;
+      const superfluousPct = currentIncome > 0 ? Math.round((superfluousExpenses / currentIncome) * 100) : 0;
+      const savedPctOfIncome = currentIncome > 0 ? Math.round((currentSaved / currentIncome) * 100) : 0;
+
+      const aiManagementTips = [
+        {
+          title: 'Potencial Oculto de Poupança Detectado',
+          badge: `+${formatBRL(aiExtraGain)}/mês`,
+          badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+          desc: `Você já guardou ${formatBRL(currentSaved)} este mês, mas a IA detectou ${formatBRL(unallocatedCash)} livres em caixa + ${formatBRL(potentialCutSuperfluous + potentialCutVariable)} que podem ser recuperados reduzindo metade dos gastos supérfluos (${formatBRL(superfluousExpenses)}). Você pode chegar a ${formatBRL(aiMaxSavePotential)}/mês!`
+        },
+        {
+          title: 'Auditoria da Regra 50-30-20',
+          badge: `Essenciais: ${essentialPct}%`,
+          badgeColor: essentialPct <= 55 ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+          desc: essentialPct <= 55
+            ? `Seus custos essenciais representam ${essentialPct}% da sua renda (${formatBRL(essentialExpenses)}), dentro do limite saudável de 50%. Isso dá margem excelente para acelerar seus investimentos.`
+            : `Atenção: seus gastos essenciais estão em ${essentialPct}% da renda (acima dos 50% recomendados). Renegocie contratos fixos ou busque renda extra com projetos de TI.`
+        },
+        {
+          title: 'Projeção de Juros Compostos (12 Meses)',
+          badge: formatBRL(projected12MonthsOptimized),
+          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+          desc: `Mantendo o ritmo atual de ${formatBRL(currentSaved)}/mês, você acumulará ${formatBRL(projected12MonthsCurrent)} em 1 ano. Se aplicar o Plano Otimizado da IA (${formatBRL(aiMaxSavePotential)}/mês), seu patrimônio saltará para ${formatBRL(projected12MonthsOptimized)} (+${formatBRL(projected12MonthsOptimized - projected12MonthsCurrent)} de diferença!).`
+        },
+        {
+          title: 'Dica de Gestão: Pague-se Primeiro no Dia 05',
+          badge: `Taxa Atual: ${savedPctOfIncome}%`,
+          badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+          desc: `Para atingir sua meta de ${savingsGoalPct}% (${formatBRL(targetSavingsByRule)}) sem esforço mental, transfira o valor para o Cofre no mesmo dia em que receber sua renda, antes de iniciar gastos variáveis como Delivery.`
+        }
+      ];
+
+      // Resposta Inteligente da IA no Chat (Local ou Gemini API)
+      const buildLocalAiAnalysis = (question) => {
+        const q = question.toLowerCase();
+        if (q.includes('juntar') || q.includes('poupar') || q.includes('quanto posso') || q.includes('potencial')) {
+          return `Pelos meus cálculos neurais, você já guardou ${formatBRL(currentSaved)} em Outubro, mas seu Potencial Máximo Realista é de ${formatBRL(aiMaxSavePotential)} neste mês! Basta alocar os ${formatBRL(unallocatedCash)} que estão parados no saldo livre e cortar ${formatBRL(potentialCutSuperfluous)} dos seus gastos supérfluos (${formatBRL(superfluousExpenses)}). Em 12 meses, isso formará uma reserva de ${formatBRL(projected12MonthsOptimized)}.`;
+        }
+        if (q.includes('meses') || q.includes('grafico') || q.includes('evolu') || q.includes('historico')) {
+          return `Analisando a curva de Maio a Outubro: seu pior mês de reserva foi Julho (R$ 350,00 devido ao pico de R$ 3.780 em gastos), mas desde Agosto você entrou em tendência de alta (R$ 650 -> R$ 700 -> ${formatBRL(currentSaved)} agora). Se seguir a projeção de Novembro, baterá seu recorde histórico!`;
+        }
+        if (q.includes('dica') || q.includes('gestao') || q.includes('corte') || q.includes('reduzir')) {
+          return `Três ações práticas de gestão para hoje: 1) Defina um teto máximo de ${formatBRL(Math.round(superfluousExpenses * 0.5))} para Delivery e compras por impulso; 2) Automatize o envio de ${formatBRL(targetSavingsByRule)} (${savingsGoalPct}% da renda) no início do mês; 3) Use suas habilidades em Python e IA para gerar novas fontes de renda como micro-SaaS ou freelas.`;
+        }
+        return `Diagnóstico Executivo: Sua renda atual é de ${formatBRL(currentIncome)}, com despesas totais de ${formatBRL(currentExpense)} e ${formatBRL(currentSaved)} guardados. Você pode elevar sua poupança mensal para ${formatBRL(aiMaxSavePotential)} otimizando gastos variáveis. Quer que eu detalhe um plano de corte ou analise a evolução dos últimos 6 meses?`;
+      };
+
+      const sendToAi = async (customPrompt) => {
+        const text = customPrompt || chatInput;
+        if (!text.trim() || isAiLoading) return;
+
+        playUiSound('ai', muted);
+        setAiChat(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
+        if (!customPrompt) setChatInput('');
+        setIsAiLoading(true);
+        setVampState('analyze');
+
+        let reply = '';
+        if (geminiKey.trim()) {
+          try {
+            const sysPrompt = `Você é Lorde Noctis, um estrategista financeiro e de carreira em IA altamente sofisticado. Responda em português de forma analítica, direta e elegante. Dados reais do usuário em Outubro: Renda=${formatBRL(currentIncome)}, Gastos=${formatBRL(currentExpense)} (Essenciais=${formatBRL(essentialExpenses)}, Variáveis=${formatBRL(variableExpenses)}, Supérfluos=${formatBRL(superfluousExpenses)}), Guardado=${formatBRL(currentSaved)}, Potencial Máximo calculado pela IA=${formatBRL(aiMaxSavePotential)}.`;
+            const res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey.trim()}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: `${sysPrompt}\n\nPergunta: ${text}` }] }] })
+              }
+            );
+            const data = await res.json();
+            reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || buildLocalAiAnalysis(text);
+          } catch (e) {
+            reply = buildLocalAiAnalysis(text);
+          }
+        } else {
+          await new Promise(r => setTimeout(r, 550));
+          reply = buildLocalAiAnalysis(text);
+        }
+
+        playUiSound('success', muted);
+        setAiChat(prev => [...prev, { id: Date.now() + 1, sender: 'ai', text: reply }]);
+        setIsAiLoading(false);
+        setVampState('idle');
+        setXp(p => p + 15);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      };
+
+      const addTransaction = (e) => {
+        e.preventDefault();
+        const val = parseFloat(txAmount.replace(',', '.'));
+        if (!txDesc.trim() || isNaN(val) || val <= 0) return;
+
+        playUiSound('coin', muted);
+        const newItem = {
+          id: Date.now(),
+          desc: txDesc.trim(),
+          amount: val,
+          type: txType,
+          category: txType === 'income' ? 'Renda' : txType === 'saved' ? 'Investimento' : txCategory,
+          date: 'Hoje'
+        };
+        setTransactions([newItem, ...transactions]);
+        setXp(p => p + 25);
+        setRubies(p => p + 15);
+        setTxDesc('');
+        setTxAmount('');
+      };
+
+      const toggleHabit = (habit) => {
+        playUiSound('success', muted);
+        setHabits(habits.map(h => {
+          if (h.id === habit.id) {
+            const nextState = !h.completed;
+            if (nextState) {
+              setXp(p => p + h.xp);
+              setRubies(p => p + h.rubies);
+            }
+            return { ...h, completed: nextState };
+          }
+          return h;
+        }));
+      };
+
+      const addHabit = (e) => {
+        e.preventDefault();
+        if (!newHabitTitle.trim()) return;
+        playUiSound('click', muted);
+        setHabits([
+          { id: Date.now(), title: newHabitTitle.trim(), category: newHabitCat, xp: 50, rubies: 25, completed: false },
+          ...habits
+        ]);
+        setNewHabitTitle('');
+      };
+
+      const xpForNext = level * 200;
+      const xpPct = Math.min(100, Math.round((xp / xpForNext) * 100));
+
+      return (
+        <div onMouseMove={handleMouseMove} className="min-h-screen w-full flex flex-col lg:flex-row">
+          
+          {/* SIDEBAR LATERAL ESQUERDA (ESTILO WORKSTATION PC) */}
+          <aside className="w-full lg:w-72 glass-panel border-r border-white/10 p-5 flex flex-col justify-between shrink-0">
+            <div className="space-y-6">
+              {/* Marca & Título */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="font-display text-lg font-extrabold tracking-wider text-white flex items-center gap-2">
+                    <span className="text-rose-500">♦</span> NOCTIS AI
+                  </h1>
+                  <p className="text-[11px] text-zinc-400 font-medium">Executive Wealth & Habit OS</p>
+                </div>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                  PC v2.5
+                </span>
+              </div>
+
+              {/* Avatar Interativo do Lorde Noctis */}
+              <div className="glass-card rounded-2xl p-4 text-center relative">
+                <NoctisAvatarWidget
+                  state={vampState}
+                  auraColor={auraColor}
+                  eyeOffset={eyeOffset}
+                  isBlinking={isBlinking}
+                  onInteract={() => {
+                    playUiSound('ai', muted);
+                    setVampState('analyze');
+                    setTimeout(() => setVampState('idle'), 1200);
+                  }}
+                />
+                <div className="mt-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400 block">
+                    Mentor Neural Ativo
+                  </span>
+                  <p className="text-xs text-zinc-300 mt-1 font-medium">
+                    "Você pode poupar até <strong className="text-emerald-400">{formatBRL(aiMaxSavePotential)}</strong> neste mês."
+                  </p>
+                </div>
+
+                {/* Barra de Nível e XP */}
+                <div className="mt-3 pt-3 border-t border-white/10 text-left">
+                  <div className="flex justify-between text-[11px] font-bold mb-1">
+                    <span className="text-white">Nível {level}</span>
+                    <span className="text-rose-400">{xp}/{xpForNext} XP</span>
+                  </div>
+                  <div className="w-full h-2 bg-zinc-950 rounded-full overflow-hidden border border-white/10">
+                    <div
+                      className="h-full bg-gradient-to-r from-rose-600 to-amber-400 rounded-full transition-all duration-500"
+                      style={{ width: `${xpPct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Menu de Navegação Desktop */}
+              <nav className="space-y-1.5">
+                {[
+                  { id: 'dashboard', label: 'Visão Geral & Meses', icon: '📊', desc: 'Gráfico multi-meses e KPIs' },
+                  { id: 'ai_advisor', label: 'Cérebro IA & Dicas', icon: '🧠', desc: 'Quanto juntar e consultoria' },
+                  { id: 'finances', label: 'Livro Caixa & Metas', icon: '💳', desc: 'Lançamentos por categoria' },
+                  { id: 'habits', label: 'Rituais de Alta Performance', icon: '🎯', desc: 'Hábitos e constância diária' }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { playUiSound('click', muted); setActiveView(item.id); }}
+                    className={`w-full text-left p-3 rounded-2xl transition-all flex items-center gap-3 ${
+                      activeView === item.id
+                        ? 'bg-gradient-to-r from-rose-600/90 to-rose-800/90 text-white shadow-lg shadow-rose-950/50 border border-rose-400/30'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <div>
+                      <div className="text-xs font-bold">{item.label}</div>
+                      <div className={`text-[10px] ${activeView === item.id ? 'text-rose-100' : 'text-zinc-500'}`}>
+                        {item.desc}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Rodapé da Sidebar: Personalização de Aura & Som */}
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-zinc-400 font-semibold">Cor da Aura:</span>
+                <div className="flex gap-1.5">
+                  {['#f43f5e', '#a855f7', '#f59e0b', '#10b981'].map(c => (
+                    <button
+                      key={c}
+                      onClick={() => setAuraColor(c)}
+                      className={`w-5 h-5 rounded-full border-2 ${auraColor === c ? 'border-white scale-110' : 'border-transparent opacity-60'}`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  onClick={() => setShowApiModal(!showApiModal)}
+                  className="flex-1 glass-card py-2 px-3 rounded-xl text-xs font-bold text-zinc-200 hover:text-white text-center"
+                >
+                  🔑 Gemini API
+                </button>
+                <button
+                  onClick={() => setMuted(!muted)}
+                  className="glass-card py-2 px-3 rounded-xl text-xs font-bold text-zinc-200"
+                >
+                  {muted ? '🔇 Mudo' : '🔊 Som'}
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* ÁREA PRINCIPAL DE TRABALHO (WIDESCREEN PC) */}
+          <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            
+            {/* TOPBAR DE INDICADORES EXECUTIVOS */}
+            <header className="glass-panel border-b border-white/10 px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30">
+              <div>
+                <h2 className="text-base font-extrabold text-white">
+                  {activeView === 'dashboard' && 'Dashboard Executivo & Análise Multi-Meses'}
+                  {activeView === 'ai_advisor' && 'Laboratório de Inteligência Artificial & Potencial de Poupança'}
+                  {activeView === 'finances' && 'Gestão de Fluxo de Caixa & Planejamento de Reserva'}
+                  {activeView === 'habits' && 'Rituais Diários & Gamificação de Produtividade'}
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Mês de Referência: <strong className="text-rose-400">Outubro 2026</strong> • Constância: <strong className="text-amber-300">🔥 {streak} dias seguidos</strong> • Rubis: <strong className="text-rose-400">♦ {rubies}</strong>
+                </p>
+              </div>
+
+              {/* Seletor Rápido da Meta de Economia */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-zinc-950/90 p-1.5 rounded-xl border border-white/10">
+                  <span className="text-[11px] font-bold text-zinc-400 px-2">Meta de Reserva:</span>
+                  {[10, 20, 30].map(pct => (
+                    <button
+                      key={pct}
+                      onClick={() => setSavingsGoalPct(pct)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                        savingsGoalPct === pct ? 'bg-rose-600 text-white shadow' : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </header>
+
+            {/* Barra de API Key (quando aberta) */}
+            {showApiModal && (
+              <div className="bg-zinc-900/95 border-b border-rose-500/40 px-6 py-3 flex items-center gap-3">
+                <span className="text-xs font-bold text-rose-300">🔑 Google Gemini API Key:</span>
+                <input
+                  type="password"
+                  placeholder="Cole sua chave gratuita do Google AI Studio para respostas generativas em nuvem..."
+                  value={geminiKey}
+                  onChange={e => setGeminiKey(e.target.value)}
+                  className="flex-1 bg-zinc-950 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500"
+                />
+                <button
+                  onClick={() => setShowApiModal(false)}
+                  className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-1.5 rounded-xl"
+                >
+                  Confirmar
+                </button>
+              </div>
+            )}
+
+            {/* CONTEÚDO PRINCIPAL DO DASHBOARD PC */}
+            <div className="p-6 space-y-6 max-w-7xl w-full mx-auto">
+              
+              {/* 4 KPI CARDS SEMPRE VISÍVEIS NO TOPO */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="glass-card p-4 rounded-2xl border-l-4 border-l-emerald-500">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-zinc-400 uppercase">Ganhos no Mês</span>
+                    <span className="text-emerald-400 text-sm">↑ Receita</span>
+                  </div>
+                  <div className="text-2xl font-extrabold text-white mt-1">{formatBRL(currentIncome)}</div>
+                  <p className="text-[11px] text-zinc-400 mt-1">
+                    +{Math.round(((currentIncome - 4500) / 4500) * 100)}% vs. Setembro ({formatBRL(4500)})
+                  </p>
+                </div>
+
+                <div className="glass-card p-4 rounded-2xl border-l-4 border-l-rose-500">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-zinc-400 uppercase">Gastos Totais</span>
+                    <span className="text-rose-400 text-sm">↓ Saídas</span>
+                  </div>
+                  <div className="text-2xl font-extrabold text-white mt-1">{formatBRL(currentExpense)}</div>
+                  <p className="text-[11px] text-zinc-400 mt-1">
+                    Supérfluos: <strong className="text-rose-400">{formatBRL(superfluousExpenses)}</strong> ({superfluousPct}% da renda)
+                  </p>
+                </div>
+
+                <div className="glass-card p-4 rounded-2xl border-l-4 border-l-amber-400">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-zinc-400 uppercase">Guardado vs. Meta ({savingsGoalPct}%)</span>
+                    <span className="text-amber-300 text-sm">♦ Cofre</span>
+                  </div>
+                  <div className="text-2xl font-extrabold text-amber-300 mt-1">
+                    {formatBRL(currentSaved)} <span className="text-xs text-zinc-400 font-normal">/ {formatBRL(targetSavingsByRule)}</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-1">
+                    {currentSaved >= targetSavingsByRule
+                      ? 'Meta mensal atingida com sucesso! ✨'
+                      : `Faltam ${formatBRL(targetSavingsByRule - currentSaved)} para a meta de ${savingsGoalPct}%`}
+                  </p>
+                </div>
+
+                <div className="glass-card p-4 rounded-2xl border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-950/30 to-zinc-900/70">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-purple-300 uppercase">Potencial Máximo (IA)</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold">🧠 Otimizado</span>
+                  </div>
+                  <div className="text-2xl font-extrabold text-emerald-400 mt-1">{formatBRL(aiMaxSavePotential)}</div>
+                  <p className="text-[11px] text-zinc-300 mt-1">
+                    Você pode juntar <strong>+{formatBRL(aiExtraGain)}</strong> além do atual!
+                  </p>
+                </div>
+              </div>
+
+              {/* VISÃO 1: DASHBOARD EXECUTIVO & GRÁFICO DE MESES */}
+              {activeView === 'dashboard' && (
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  
+                  {/* Coluna Esquerda (2/3): Gráfico Multi-Meses + Inspecionador de Mês */}
+                  <div className="xl:col-span-2 space-y-6">
+                    <div className="glass-card p-5 rounded-3xl">
+                      <MultiMonthChart
+                        monthsData={monthsHistory}
+                        selectedMonthIdx={selectedMonthIdx}
+                        onSelectMonth={(idx) => { playUiSound('click', muted); setSelectedMonthIdx(idx); }}
+                        formatBRL={formatBRL}
+                      />
+
+                      {/* Barra de Inspeção do Mês Clicado no Gráfico */}
+                      <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 bg-zinc-900/60 p-3.5 rounded-2xl">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 block">
+                            Mês Selecionado no Gráfico
+                          </span>
+                          <h4 className="text-sm font-extrabold text-white">{inspectedMonth.month}</h4>
+                        </div>
+                        <div className="flex flex-wrap gap-6 text-xs">
+                          <div>
+                            <span className="text-zinc-400 block">Receitas:</span>
+                            <strong className="text-emerald-400 text-sm">{formatBRL(inspectedMonth.income)}</strong>
+                          </div>
+                          <div>
+                            <span className="text-zinc-400 block">Despesas:</span>
+                            <strong className="text-rose-400 text-sm">{formatBRL(inspectedMonth.expense)}</strong>
+                          </div>
+                          <div>
+                            <span className="text-zinc-400 block">Guardado no Mês:</span>
+                            <strong className="text-amber-300 text-sm">{formatBRL(inspectedMonth.saved)}</strong>
+                          </div>
+                          <div>
+                            <span className="text-zinc-400 block">Taxa de Poupança:</span>
+                            <strong className="text-purple-300 text-sm">
+                              {inspectedMonth.income > 0 ? Math.round((inspectedMonth.saved / inspectedMonth.income) * 100) : 0}%
+                            </strong>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Diagnóstico de "Quanto Pode Ser Juntado" (Comparativo Visual) */}
+                    <div className="glass-card p-5 rounded-3xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-sm font-bold text-white">
+                            🧠 Simulador IA: Quanto Você Pode Juntar neste Mês vs. 12 Meses
+                          </h3>
+                          <p className="text-xs text-zinc-400">
+                            Comparativo entre o que já foi guardado, sua meta de {savingsGoalPct}% e o plano otimizado pela IA
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-zinc-950/80 p-4 rounded-2xl border border-white/5">
+                          <span className="text-[11px] font-bold text-zinc-400 uppercase">1. Poupança Atual</span>
+                          <div className="text-xl font-extrabold text-white mt-1">{formatBRL(currentSaved)}<span className="text-xs text-zinc-500">/mês</span></div>
+                          <p className="text-xs text-zinc-400 mt-2">
+                            Em 12 meses (c/ CDI): <strong className="text-zinc-200">{formatBRL(projected12MonthsCurrent)}</strong>
+                          </p>
+                        </div>
+
+                        <div className="bg-zinc-950/80 p-4 rounded-2xl border border-amber-500/30">
+                          <span className="text-[11px] font-bold text-amber-300 uppercase">2. Meta Escolhida ({savingsGoalPct}%)</span>
+                          <div className="text-xl font-extrabold text-amber-300 mt-1">{formatBRL(targetSavingsByRule)}<span className="text-xs text-zinc-500">/mês</span></div>
+                          <p className="text-xs text-zinc-400 mt-2">
+                            Em 12 meses (c/ CDI): <strong className="text-amber-200">{formatBRL(Math.round(targetSavingsByRule * 12.68))}</strong>
+                          </p>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-emerald-950/50 to-zinc-950 p-4 rounded-2xl border border-emerald-500/40">
+                          <span className="text-[11px] font-bold text-emerald-300 uppercase">3. Potencial IA Otimizado</span>
+                          <div className="text-xl font-extrabold text-emerald-400 mt-1">{formatBRL(aiMaxSavePotential)}<span className="text-xs text-zinc-400">/mês</span></div>
+                          <p className="text-xs text-emerald-200/80 mt-2">
+                            Em 12 meses (c/ CDI): <strong className="text-emerald-300">{formatBRL(projected12MonthsOptimized)}</strong>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Coluna Direita (1/3): Dicas de Gestão da IA + Resumo de Hábitos */}
+                  <div className="space-y-6">
+                    <div className="glass-card p-5 rounded-3xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <span>⚡ Dicas de Gestão da IA Noctis</span>
+                        </h3>
+                        <button
+                          onClick={() => setActiveView('ai_advisor')}
+                          className="text-xs font-bold text-rose-400 hover:text-rose-300"
+                        >
+                          Abrir Chat IA →
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {aiManagementTips.map((tip, i) => (
+                          <div key={i} className="p-3.5 rounded-2xl bg-zinc-950/75 border border-white/5 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <h4 className="text-xs font-extrabold text-white">{tip.title}</h4>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${tip.badgeColor}`}>
+                                {tip.badge}
+                              </span>
+                            </div>
+                            <p className="text-xs text-zinc-400 leading-relaxed">{tip.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* VISÃO 2: LABORATÓRIO DE IA & CONSULTORIA DE GESTÃO */}
+              {activeView === 'ai_advisor' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  
+                  {/* Esquerda (5 colunas): Diagnóstico Profundo de Categorias & Cortes */}
+                  <div className="lg:col-span-5 space-y-6">
+                    <div className="glass-card p-5 rounded-3xl space-y-4">
+                      <h3 className="text-sm font-bold text-white">
+                        🔍 Raio-X de Gastos & Onde Cortar para Juntar Mais
+                      </h3>
+
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-xs font-semibold mb-1">
+                            <span className="text-zinc-300">Custos Essenciais / Fixos</span>
+                            <span className="text-white">{formatBRL(essentialExpenses)} ({essentialPct}%)</span>
+                          </div>
+                          <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden">
+                            <div className="h-full bg-sky-500" style={{ width: `${Math.min(100, essentialPct)}%` }} />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-xs font-semibold mb-1">
+                            <span className="text-zinc-300">Gastos Variáveis (Otimizável em 15%)</span>
+                            <span className="text-amber-300">{formatBRL(variableExpenses)} (Economia: +{formatBRL(potentialCutVariable)})</span>
+                          </div>
+                          <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-400" style={{ width: `${Math.min(100, (variableExpenses / (currentIncome || 1)) * 100)}%` }} />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-xs font-semibold mb-1">
+                            <span className="text-zinc-300">Supérfluos / Impulso (Otimizável em 50%)</span>
+                            <span className="text-rose-400">{formatBRL(superfluousExpenses)} (Economia: +{formatBRL(potentialCutSuperfluous)})</span>
+                          </div>
+                          <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden">
+                            <div className="h-full bg-rose-500" style={{ width: `${Math.min(100, superfluousPct)}%` }} />
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-white/10 bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-500/30">
+                          <div className="text-xs font-bold text-emerald-300">Resumo da Equação de Poupança IA:</div>
+                          <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                            Guardado Atual (<strong>{formatBRL(currentSaved)}</strong>) + Caixa Livre (<strong>{formatBRL(unallocatedCash)}</strong>) + Corte Inteligente (<strong>{formatBRL(potentialCutSuperfluous + potentialCutVariable)}</strong>) = <strong className="text-emerald-400 underline">{formatBRL(aiMaxSavePotential)}/mês</strong>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="glass-card p-5 rounded-3xl space-y-3">
+                      <h3 className="text-sm font-bold text-white">📋 Recomendações Executivas</h3>
+                      {aiManagementTips.map((tip, idx) => (
+                        <div key={idx} className="p-3 rounded-xl bg-zinc-950/60 border border-white/5">
+                          <div className="text-xs font-bold text-rose-300">{tip.title}</div>
+                          <p className="text-xs text-zinc-400 mt-1">{tip.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Direita (7 colunas): Chat Interativo com o Mentor IA Noctis */}
+                  <div className="lg:col-span-7 glass-card p-5 rounded-3xl flex flex-col h-[560px]">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <div>
+                        <h3 className="text-sm font-bold text-white">💬 Consultor Estratégico Noctis AI</h3>
+                        <p className="text-xs text-zinc-400">Pergunte sobre cortes de orçamento, projeções de meses ou carreira em TI</p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        {geminiKey ? 'Gemini LLM Conectado' : 'Motor Analítico Local Ativo'}
+                      </span>
+                    </div>
+
+                    {/* Botões de Perguntas Rápidas */}
+                    <div className="flex flex-wrap gap-2 py-3 border-b border-white/5">
+                      {[
+                        'Quanto posso juntar no máximo este mês?',
+                        'Analise a evolução do gráfico de Maio a Outubro',
+                        'Me dê 3 dicas práticas de gestão financeira',
+                        'Como aumentar minha renda com Python e IA?'
+                      ].map((q, i) => (
+                        <button
+                          key={i}
+                          onClick={() => sendToAi(q)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/20 hover:text-rose-200 border border-white/10 transition"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Histórico de Mensagens */}
+                    <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-2">
+                      {aiChat.map(msg => (
+                        <div
+                          key={msg.id}
+                          className={`p-4 rounded-2xl text-xs leading-relaxed max-w-xl ${
+                            msg.sender === 'ai'
+                              ? 'bg-zinc-950/90 border border-rose-500/30 text-zinc-200 mr-auto'
+                              : 'bg-gradient-to-r from-rose-600 to-rose-700 text-white ml-auto'
+                          }`}
+                        >
+                          <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-75 mb-1">
+                            {msg.sender === 'ai' ? '🧛 Lorde Noctis (IA Estrategista)' : 'Você'}
+                          </div>
+                          <p>{msg.text}</p>
+                        </div>
+                      ))}
+                      {isAiLoading && (
+                        <div className="text-xs text-rose-400 animate-pulse font-semibold">
+                          Noctis AI está cruzando seus dados financeiros e gerando recomendações...
+                        </div>
+                      )}
+                      <div ref={chatEndRef} />
+                    </div>
+
+                    {/* Input de Chat */}
+                    <form
+                      onSubmit={e => { e.preventDefault(); sendToAi(); }}
+                      className="pt-3 border-t border-white/10 flex gap-2"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Digite sua pergunta para a IA analisar..."
+                        value={chatInput}
+                        onChange={e => setChatInput(e.target.value)}
+                        className="flex-1 bg-zinc-950 border border-white/15 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
+                      />
+                      <button
+                        type="submit"
+                        className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition"
+                      >
+                        Analisar
+                      </button>
+                    </form>
+                  </div>
+
+                </div>
+              )}
+
+              {/* VISÃO 3: LIVRO CAIXA & LANÇAMENTOS POR CATEGORIA */}
+              {activeView === 'finances' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  
+                  {/* Formulário de Novo Lançamento */}
+                  <div className="glass-card p-5 rounded-3xl h-fit space-y-4">
+                    <h3 className="text-sm font-bold text-white">➕ Novo Lançamento em Outubro</h3>
+                    <form onSubmit={addTransaction} className="space-y-3">
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { id: 'income', label: '+ Ganho', color: 'bg-emerald-600 text-white' },
+                          { id: 'expense', label: '- Gasto', color: 'bg-rose-600 text-white' },
+                          { id: 'saved', label: '♦ Guardar', color: 'bg-amber-500 text-zinc-950' }
+                        ].map(b => (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => setTxType(b.id)}
+                            className={`py-2 rounded-xl text-xs font-bold transition ${
+                              txType === b.id ? b.color : 'bg-zinc-900 text-zinc-400'
+                            }`}
+                          >
+                            {b.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-400 block mb-1">Descrição</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Projeto Freelance, Mercado, Delivery..."
+                          value={txDesc}
+                          onChange={e => setTxDesc(e.target.value)}
+                          className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[11px] font-semibold text-zinc-400 block mb-1">Valor (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="0,00"
+                            value={txAmount}
+                            onChange={e => setTxAmount(e.target.value)}
+                            className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                          />
+                        </div>
+
+                        {txType === 'expense' && (
+                          <div>
+                            <label className="text-[11px] font-semibold text-zinc-400 block mb-1">Classificação IA</label>
+                            <select
+                              value={txCategory}
+                              onChange={e => setTxCategory(e.target.value)}
+                              className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                            >
+                              <option value="Essencial">Essencial / Fixo</option>
+                              <option value="Variável">Variável</option>
+                              <option value="Supérfluo">Supérfluo / Impulso</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-lg shadow-rose-950/50"
+                      >
+                        Registrar e Atualizar Gráfico
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Tabela Completa de Movimentações */}
+                  <div className="lg:col-span-2 glass-card p-5 rounded-3xl">
+                    <h3 className="text-sm font-bold text-white mb-4">📑 Histórico Detalhado do Mês Atual</h3>
+                    <div className="space-y-2">
+                      {transactions.map(tx => (
+                        <div key={tx.id} className="p-3.5 rounded-2xl bg-zinc-950/70 border border-white/5 flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
+                              tx.type === 'income'
+                                ? 'bg-emerald-500/15 text-emerald-400'
+                                : tx.type === 'saved'
+                                ? 'bg-amber-500/15 text-amber-300'
+                                : 'bg-rose-500/15 text-rose-400'
+                            }`}>
+                              {tx.type === 'income' ? '↑' : tx.type === 'saved' ? '♦' : '↓'}
+                            </span>
+                            <div className="truncate">
+                              <div className="text-xs font-bold text-white truncate">{tx.desc}</div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-zinc-400 font-semibold">
+                                  {tx.category}
+                                </span>
+                                <span className="text-[10px] text-zinc-500">{tx.date}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className={`text-sm font-extrabold ${
+                              tx.type === 'income' ? 'text-emerald-400' : tx.type === 'saved' ? 'text-amber-300' : 'text-rose-400'
+                            }`}>
+                              {tx.type === 'expense' ? '- ' : '+ '}{formatBRL(tx.amount)}
+                            </span>
+                            <button
+                              onClick={() => setTransactions(transactions.filter(i => i.id !== tx.id))}
+                              className="text-zinc-600 hover:text-rose-400 text-xs px-2 py-1"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* VISÃO 4: RITUAIS DE ALTA PERFORMANCE (HÁBITOS NO PC) */}
+              {activeView === 'habits' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="glass-card p-5 rounded-3xl h-fit space-y-4">
+                    <h3 className="text-sm font-bold text-white">🎯 Novo Ritual de Performance</h3>
+                    <form onSubmit={addHabit} className="space-y-3">
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-400 block mb-1">Título do Hábito / Meta</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Estudar FastAPI e Machine Learning..."
+                          value={newHabitTitle}
+                          onChange={e => setNewHabitTitle(e.target.value)}
+                          className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-400 block mb-1">Área de Foco</label>
+                        <select
+                          value={newHabitCat}
+                          onChange={e => setNewHabitCat(e.target.value)}
+                          className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                        >
+                          <option value="Projetos TI">Projetos TI & Código</option>
+                          <option value="Carreira">Carreira & Estudos</option>
+                          <option value="Finanças">Gestão Financeira</option>
+                          <option value="Saúde">Saúde & Vitalidade</option>
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2.5 rounded-xl transition"
+                      >
+                        + Adicionar Ritual
+                      </button>
+                    </form>
+                  </div>
+
+                  <div className="lg:col-span-2 glass-card p-5 rounded-3xl space-y-3">
+                    <h3 className="text-sm font-bold text-white mb-2">⚡ Seus Rituais Diários</h3>
+                    {habits.map(h => (
+                      <div
+                        key={h.id}
+                        className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition ${
+                          h.completed
+                            ? 'bg-zinc-950/40 border-white/5 opacity-60'
+                            : 'bg-zinc-950/80 border-white/10 hover:border-rose-500/40'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <button
+                            onClick={() => toggleHabit(h)}
+                            className={`w-10 h-10 rounded-xl font-bold text-sm flex items-center justify-center transition ${
+                              h.completed
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white'
+                            }`}
+                          >
+                            {h.completed ? '✓' : '♦'}
+                          </button>
+                          <div>
+                            <h4 className={`text-sm font-bold ${h.completed ? 'line-through text-zinc-500' : 'text-white'}`}>
+                              {h.title}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-zinc-400 font-semibold">
+                                {h.category}
+                              </span>
+                              <span className="text-[10px] font-bold text-rose-400">+{h.xp} XP</span>
+                              <span className="text-[10px] font-bold text-amber-300">+{h.rubies} ♦</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => setHabits(habits.filter(item => item.id !== h.id))}
+                          className="text-zinc-600 hover:text-rose-400 text-xs px-2"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
