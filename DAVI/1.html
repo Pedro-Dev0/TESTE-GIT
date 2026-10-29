@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Noctis AI — Analisador Financeiro & Renda Fixa (Zero-Scroll PC)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #06060a;
+      color: #f8fafc;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+    }
+    .font-display { font-family: 'Cinzel', serif; }
+
+    .glass-panel {
+      background: rgba(13, 13, 20, 0.88);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .glass-card {
+      background: rgba(20, 20, 30, 0.72);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-card:hover {
+      border-color: rgba(244, 63, 94, 0.35);
+    }
+
+    @keyframes floatAvatar { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-4px); } }
+    @keyframes spinSlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .anim-float { animation: floatAvatar 4s ease-in-out infinite; }
+    .anim-spin { animation: spinSlow 24s linear infinite; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(244, 63, 94, 0.3); border-radius: 9999px; }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-rose-950/25 via-[#07070c] to-[#040407]">
+  <div id="root" class="h-full w-full"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // 🔊 Efeitos Sonoros Reativos de Interface
+    const playSound = (type, muted) => {
+      if (muted) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = ctx.currentTime;
+        const tone = (freq, start, dur, wave = 'sine', vol = 0.05) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = wave;
+          osc.frequency.setValueAtTime(freq, now + start);
+          gain.gain.setValueAtTime(vol, now + start);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + start);
+          osc.stop(now + start + dur);
+        };
+        if (type === 'coin') { tone(587.33, 0, 0.1); tone(880, 0.07, 0.22); }
+        else if (type === 'success') { tone(440, 0, 0.12); tone(659.25, 0.08, 0.25); }
+        else if (type === 'click') { tone(540, 0, 0.04); }
+      } catch (e) {}
+    };
+
+    // 🧠 Classificador NLP Automático de Gastos
+    const autoClassifyExpense = (description) => {
+      const text = description.toLowerCase();
+      const superfluous = ['ifood', 'delivery', 'lanche', 'pizza', 'bar', 'festa', 'jogo', 'game', 'steam', 'streaming', 'netflix', 'shopping', 'roupa', 'doce', 'cerveja', 'impulso', 'uber eats'];
+      const essential = ['aluguel', 'condominio', 'condomínio', 'luz', 'energia', 'agua', 'água', 'internet', 'mercado', 'supermercado', 'feira', 'farmacia', 'farmácia', 'saude', 'saúde', 'faculdade', 'curso', 'imposto', 'iptu'];
+      if (superfluous.some(k => text.includes(k))) return 'Supérfluo';
+      if (essential.some(k => text.includes(k))) return 'Essencial';
+      return 'Variável';
+    };
+
+    // 🧛‍♂️ Avatar Compacto do Lorde Noctis (Idêntico ao da sua imagem)
+    function NoctisAvatar({ isAnalyzing }) {
+      const auraColor = '#f43f5e';
+      return (
+        <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full blur-xl opacity-45" style={{ background: `radial-gradient(circle, ${auraColor} 0%, transparent 70%)` }} />
+          <svg viewBox="0 0 140 140" className="absolute inset-0 w-full h-full anim-spin opacity-60">
+            <circle cx="70" cy="70" r="64" fill="none" stroke={auraColor} strokeWidth="1.5" strokeDasharray="14 10" />
+            <circle cx="70" cy="6" r="3" fill={auraColor} />
+          </svg>
+          <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white/15 anim-float shadow-xl bg-[#090910]">
+            <svg viewBox="0 0 120 120" className="w-full h-full">
+              <circle cx="60" cy="52" r="34" fill={auraColor} opacity="0.2" />
+              <path d="M 15 120 L 28 74 L 45 92 L 60 85 L 75 92 L 92 74 L 105 120 Z" fill="#14141f" />
+              <path d="M 28 74 L 46 120 L 34 120 Z" fill={auraColor} opacity="0.85" />
+              <path d="M 92 74 L 74 120 L 86 120 Z" fill={auraColor} opacity="0.85" />
+              <polygon points="60,92 65,98 60,104 55,98" fill={auraColor} />
+              <path d="M 40 42 C 40 26 80 26 80 42 C 80 64 68 78 60 82 C 52 78 40 64 40 42 Z" fill="#e2e8f0" />
+              <path d="M 36 48 C 34 25 50 18 60 18 C 72 18 86 25 84 48 C 81 36 74 30 66 34 C 62 28 52 30 46 38 C 42 35 38 40 36 48 Z" fill="#1e293b" />
+              <path d="M 38 42 C 42 26 56 22 68 24 C 58 28 48 34 44 45 Z" fill="#f8fafc" opacity="0.85" />
+              <path d="M 45 51 Q 50 48 56 52 Q 50 55 45 51 Z" fill="#09090f" />
+              <circle cx="50.5" cy="51.5" r="2.4" fill={auraColor} />
+              <path d="M 64 52 Q 70 48 75 51 Q 70 55 64 52 Z" fill="#09090f" />
+              <circle cx="69.5" cy="51.5" r="2.4" fill={auraColor} />
+              {isAnalyzing ? (
+                <path d="M 54 67 Q 60 72 66 67 Q 60 75 54 67 Z" fill="#881337" />
+              ) : (
+                <path d="M 55 68 Q 60 70.5 65 68" fill="none" stroke="#475569" strokeWidth="1.6" strokeLinecap="round" />
+              )}
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    // 📈 Gráfico Compacto de Projeção (Cabe sem Scroll!)
+    function CompactProjectionChart({ timelineData, activeGoal, formatBRL }) {
+      const maxDataVal = Math.max(
+        ...timelineData.map(d => Math.max(d.cumulativeCurrent, d.cumulativeAi)),
+        activeGoal?.targetAmount || 1000,
+        500
+      ) * 1.15;
+
+      const goalY = activeGoal
+        ? Math.max(16, Math.min(142, 145 - (activeGoal.targetAmount / maxDataVal) * 120))
+        : null;
+
+      return (
+        <div className="w-full h-44 bg-zinc-950/80 rounded-2xl border border-white/10 p-3">
+          <svg viewBox="0 0 680 168" className="w-full h-full overflow-visible">
+            {[0, 0.5, 1].map((step, i) => {
+              const y = 145 - step * 120;
+              const val = Math.round(maxDataVal * step);
+              return (
+                <g key={i}>
+                  <line x1="48" y1={y} x2="660" y2={y} stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
+                  <text x="42" y={y + 3} textAnchor="end" fill="#71717a" fontSize="9" fontWeight="600">
+                    R${val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
+                  </text>
+                </g>
+              );
+            })}
+
+            {activeGoal && goalY !== null && (
+              <g>
+                <line x1="48" y1={goalY} x2="660" y2={goalY} stroke="#f43f5e" strokeWidth="1.5" strokeDasharray="5 3" />
+                <rect x="520" y={goalY - 14} width="140" height="13" rx="3" fill="#881337" />
+                <text x="590" y={goalY - 5} textAnchor="middle" fill="#fecdd3" fontSize="8" fontWeight="800">
+                  🎯 {activeGoal.title}: {formatBRL(activeGoal.targetAmount)}
+                </text>
+              </g>
+            )}
+
+            {timelineData.map((item, idx) => {
+              const stepWidth = 590 / Math.max(1, timelineData.length);
+              const groupX = 70 + idx * stepWidth;
+              const curBarH = Math.max(3, (item.cumulativeCurrent / maxDataVal) * 120);
+              const aiBarH = Math.max(3, (item.cumulativeAi / maxDataVal) * 120);
+
+              return (
+                <g key={idx}>
+                  <rect x={groupX - 13} y={145 - curBarH} width="11" height={curBarH} rx="2.5" fill={item.isCurrent ? "#f59e0b" : "#f59e0b88"} />
+                  <rect x={groupX + 1} y={145 - aiBarH} width="11" height={aiBarH} rx="2.5" fill={item.isCurrent ? "#10b981" : "#10b98199"} />
+                  <text x={groupX} y={Math.max(10, 140 - Math.max(curBarH, aiBarH))} textAnchor="middle" fill="#a7f3d0" fontSize="8" fontWeight="700">
+                    R${item.cumulativeAi >= 1000 ? `${(item.cumulativeAi / 1000).toFixed(1)}k` : item.cumulativeAi}
+                  </text>
+                  <text x={groupX} y="161" textAnchor="middle" fill={item.isCurrent ? "#fda4af" : "#a1a1aa"} fontSize="9" fontWeight={item.isCurrent ? "800" : "600"}>
+                    {item.label}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      );
+    }
+
+    function App() {
+      const loadSaved = (k, def) => {
+        try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : def; } catch (e) { return def; }
+      };
+
+      // Estados Principais (Começa Zerado no Mês 1)
+      const [currentMonthNum, setCurrentMonthNum] = useState(() => loadSaved('noctis_zs_month', 1));
+      const [closedMonths, setClosedMonths] = useState(() => loadSaved('noctis_zs_closed', []));
+      const [transactions, setTransactions] = useState(() => loadSaved('noctis_zs_txs', []));
+      const [goals, setGoals] = useState(() => loadSaved('noctis_zs_goals', [
+        { id: 1, title: 'Reserva de Segurança', targetAmount: 3000 }
+      ]));
+      const [selectedGoalId, setSelectedGoalId] = useState(1);
+      const [savingsGoalPct, setSavingsGoalPct] = useState(() => loadSaved('noctis_zs_pct', 20));
+
+      // Inputs Financeiros
+      const [txDesc, setTxDesc] = useState('');
+      const [txAmount, setTxAmount] = useState('');
+      const [txType, setTxType] = useState('income');
+      const [txCategory, setTxCategory] = useState('Essencial');
+      const [newGoalTitle, setNewGoalTitle] = useState('');
+      const [newGoalTarget, setNewGoalTarget] = useState('');
+
+      // Simulador de Investimentos Seguros
+      const [simHorizonMonths, setSimHorizonMonths] = useState(12);
+      const [selectedPillar, setSelectedPillar] = useState('selic'); // Pílula interativa sem scroll!
+
+      // Estados de Hábitos de Riqueza (Com Formulário de Adição Completo!)
+      const [habits, setHabits] = useState(() => loadSaved('noctis_zs_habits', [
+        { id: 1, title: 'Separar o valor de investimento ao receber ("Pague-se Primeiro")', category: 'Finanças', xp: 60, completed: false },
+        { id: 2, title: 'Anotar gastos do dia e evitar compras por impulso', category: 'Economia', xp: 45, completed: false },
+        { id: 3, title: 'Estudar 1h de Python & IA para crescer renda ativa', category: 'Carreira TI', xp: 55, completed: false }
+      ]));
+      const [newHabitTitle, setNewHabitTitle] = useState('');
+      const [newHabitCat, setNewHabitCat] = useState('Finanças');
+      const [newHabitXp, setNewHabitXp] = useState(50);
+
+      // Estados da Chave API (Corrigido para nunca enviar chave AQ. para a OpenAI!)
+      const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('noctis_zs_api_key') || '');
+      const [detectedModel, setDetectedModel] = useState(() => localStorage.getItem('noctis_zs_model') || 'gemini-2.5-flash');
+      const [apiStatus, setApiStatus] = useState(() => {
+        const k = localStorage.getItem('noctis_zs_api_key') || '';
+        return k.startsWith('AIza') || k.startsWith('gsk_') ? 'valid' : 'none';
+      });
+      const [apiStatusMsg, setApiStatusMsg] = useState('');
+      const [showApiWizard, setShowApiWizard] = useState(false);
+
+      // Navegação e Chat IA
+      const [activeTab, setActiveTab] = useState('ai_analyzer');
+      const [xp, setXp] = useState(() => loadSaved('noctis_zs_xp', 40));
+      const [level, setLevel] = useState(() => loadSaved('noctis_zs_lvl', 1));
+      const [muted, setMuted] = useState(false);
+      const [chatInput, setChatInput] = useState('');
+      const [isAiThinking, setIsAiThinking] = useState(false);
+      const [aiMessages, setAiMessages] = useState([
+        {
+          id: 1,
+          sender: 'ai',
+          badge: 'LORDE NOCTIS — ANALISADOR FINANCEIRO',
+          text: 'Saudações! Sou Lorde Noctis, seu Analisador Financeiro e Mentor de Investimentos Seguros. Você pode clicar nos módulos à esquerda, digitar perguntas ou até enviar comandos diretos no chat (ex: "Ganhei 4000 de salário, gastei 1400 de aluguel e 450 de iFood") que eu cadastro e audito tudo na hora!'
+        }
+      ]);
+      const chatEndRef = useRef(null);
+
+      // Salvar automaticamente no navegador
+      useEffect(() => { localStorage.setItem('noctis_zs_month', JSON.stringify(currentMonthNum)); }, [currentMonthNum]);
+      useEffect(() => { localStorage.setItem('noctis_zs_closed', JSON.stringify(closedMonths)); }, [closedMonths]);
+      useEffect(() => { localStorage.setItem('noctis_zs_txs', JSON.stringify(transactions)); }, [transactions]);
+      useEffect(() => { localStorage.setItem('noctis_zs_goals', JSON.stringify(goals)); }, [goals]);
+      useEffect(() => { localStorage.setItem('noctis_zs_pct', JSON.stringify(savingsGoalPct)); }, [savingsGoalPct]);
+      useEffect(() => { localStorage.setItem('noctis_zs_habits', JSON.stringify(habits)); }, [habits]);
+      useEffect(() => { localStorage.setItem('noctis_zs_xp', JSON.stringify(xp)); }, [xp]);
+      useEffect(() => { localStorage.setItem('noctis_zs_lvl', JSON.stringify(level)); }, [level]);
+
+      useEffect(() => {
+        if (xp >= level * 150) {
+          setXp(p => p - level * 150);
+          setLevel(l => l + 1);
+        }
+      }, [xp, level]);
+
+      // 📊 CÁLCULOS FINANCEIROS EM TEMPO REAL
+      const currentIncome = transactions.filter(t => t.type === 'income').reduce((a, b) => a + b.amount, 0);
+      const currentExpense = transactions.filter(t => t.type === 'expense').reduce((a, b) => a + b.amount, 0);
+      const explicitSaved = transactions.filter(t => t.type === 'saved').reduce((a, b) => a + b.amount, 0);
+
+      const essentialExp = transactions.filter(t => t.type === 'expense' && t.category === 'Essencial').reduce((a, b) => a + b.amount, 0);
+      const variableExp = transactions.filter(t => t.type === 'expense' && t.category === 'Variável').reduce((a, b) => a + b.amount, 0);
+      const superfluousExp = transactions.filter(t => t.type === 'expense' && t.category === 'Supérfluo').reduce((a, b) => a + b.amount, 0);
+
+      const freeCashBalance = Math.max(0, currentIncome - currentExpense - explicitSaved);
+      const pastAccumulated = closedMonths.reduce((acc, m) => acc + m.saved, 0);
+      const totalSavedSoFar = pastAccumulated + explicitSaved;
+
+      const currentMonthlySavePace = explicitSaved > 0
+        ? explicitSaved + Math.round(freeCashBalance * 0.5)
+        : Math.max(0, currentIncome - currentExpense);
+
+      const aiCutSuperfluous = Math.round(superfluousExp * 0.5);
+      const aiCutVariable = Math.round(variableExp * 0.15);
+      const aiOptimizedMonthlySave = Math.max(
+        currentMonthlySavePace,
+        explicitSaved + freeCashBalance + aiCutSuperfluous + aiCutVariable,
+        Math.round((currentIncome * savingsGoalPct) / 100)
+      );
+
+      // 🛡️ CÁLCULO DE INVESTIMENTOS SEGUROS (Renda Fixa)
+      const calcCompoundGrowth = (initialPrincipal, monthlyContribution, monthlyRate, months) => {
+        let total = initialPrincipal;
+        for (let m = 1; m <= months; m++) {
+          total = total * (1 + monthlyRate) + monthlyContribution;
+        }
+        return Math.round(total);
+      };
+
+      const basePrincipal = totalSavedSoFar;
+      const monthlyDeposit = aiOptimizedMonthlySave > 0 ? aiOptimizedMonthlySave : 300;
+      const totalInvestedOutOfPocket = basePrincipal + monthlyDeposit * simHorizonMonths;
+
+      const finalPoupanca = calcCompoundGrowth(basePrincipal, monthlyDeposit, 0.0058, simHorizonMonths);
+      const finalTesouroCdb = calcCompoundGrowth(basePrincipal, monthlyDeposit, 0.0086, simHorizonMonths);
+      const finalLciLca = calcCompoundGrowth(basePrincipal, monthlyDeposit, 0.0094, simHorizonMonths);
+
+      const yieldPoupanca = Math.max(0, finalPoupanca - totalInvestedOutOfPocket);
+      const yieldTesouroCdb = Math.max(0, finalTesouroCdb - totalInvestedOutOfPocket);
+      const yieldLciLca = Math.max(0, finalLciLca - totalInvestedOutOfPocket);
+
+      // Linha do Tempo para o Gráfico
+      const buildTimeline = () => {
+        const list = [];
+        let runCur = 0, runAi = 0;
+        closedMonths.forEach(m => {
+          runCur += m.saved; runAi += m.saved;
+          list.push({ label: `Mês ${m.monthNum}`, cumulativeCurrent: Math.round(runCur), cumulativeAi: Math.round(runAi), isCurrent: false });
+        });
+        runCur += currentMonthlySavePace;
+        runAi += aiOptimizedMonthlySave;
+        list.push({ label: `Mês ${currentMonthNum}`, cumulativeCurrent: Math.round(runCur), cumulativeAi: Math.round(runAi), isCurrent: true });
+
+        let projCur = runCur, projAi = runAi;
+        for (let i = 1; i <= 5; i++) {
+          projCur = projCur * 1.0086 + currentMonthlySavePace;
+          projAi = projAi * 1.0094 + aiOptimizedMonthlySave;
+          list.push({ label: `Mês +${i}`, cumulativeCurrent: Math.round(projCur), cumulativeAi: Math.round(projAi), isCurrent: false });
+        }
+        return list;
+      };
+
+      const timelineData = buildTimeline();
+      const activeGoal = goals.find(g => g.id === selectedGoalId) || goals[0];
+      const formatBRL = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      // 🔑 VALIDADOR INTELIGENTE DE CHAVE API (Detecta o erro AQ.Ab8RN e explica na hora!)
+      const handleValidateApiKey = async () => {
+        const clean = geminiKey.replace(/["'\s]/g, '');
+        setGeminiKey(clean);
+
+        if (!clean) {
+          setApiStatus('none');
+          setApiStatusMsg('Modo Analítico Nativo ativado (sem chave externa).');
+          return;
+        }
+
+        // Detecta se o usuário colou um token AQ. em vez de uma chave AIzaSy...
+        if (clean.startsWith('AQ.')) {
+          setApiStatus('error');
+          setApiStatusMsg('⚠️ Atenção: O código iniciado por "AQ." é um token OAuth da conta, não uma chave de API! No Google AI Studio (aistudio.google.com/apikey), clique em "Create API key" — a chave correta começa com as letras "AIzaSy...". Enquanto isso, ativei meu Motor Analítico Nativo 100% funcional para você!');
+          return;
+        }
+
+        setApiStatus('testing');
+        setApiStatusMsg('Validando chave nos servidores de IA...');
+
+        try {
+          if (clean.startsWith('gsk_')) {
+            const r = await fetch('https://api.groq.com/openai/v1/models', {
+              headers: { 'Authorization': `Bearer ${clean}` }
+            });
+            if (r.ok) {
+              localStorage.setItem('noctis_zs_api_key', clean);
+              localStorage.setItem('noctis_zs_model', 'llama-3.3-70b-versatile');
+              setDetectedModel('llama-3.3-70b-versatile');
+              setApiStatus('valid');
+              setApiStatusMsg('✅ Chave Groq validada com sucesso! Modelo ativo: llama-3.3-70b-versatile');
+              return;
+            }
+          }
+
+          // Padrão: Testa no Google Gemini (NUNCA envia para a OpenAI por engano!)
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${clean}`);
+          const data = await res.json();
+
+          if (!res.ok) {
+            setApiStatus('error');
+            setApiStatusMsg(`⚠️ O Google AI Studio recusou esta chave: "${data?.error?.message || 'Chave inválida'}". Certifique-se de que ela começa com "AIzaSy...". (O Motor Analítico Nativo segue ativo!).`);
+            return;
+          }
+
+          const models = (data.models || [])
+            .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+            .map(m => m.name.replace('models/', ''));
+
+          const bestModel =
+            models.find(m => m === 'gemini-2.5-flash') ||
+            models.find(m => m.includes('2.5-flash')) ||
+            models.find(m => m === 'gemini-2.0-flash') ||
+            models.find(m => m.includes('flash')) ||
+            models[0] || 'gemini-2.5-flash';
+
+          localStorage.setItem('noctis_zs_api_key', clean);
+          localStorage.setItem('noctis_zs_model', bestModel);
+          setDetectedModel(bestModel);
+          setApiStatus('valid');
+          setApiStatusMsg(`✅ Chave Google Gemini validada! Modelo ativo: ${bestModel}`);
+        } catch (err) {
+          setApiStatus('error');
+          setApiStatusMsg(`Erro de conexão: ${err.message}. Usando Motor Analítico Nativo.`);
+        }
+      };
+
+      // 🤖 EXTRATOR DE COMANDOS EM LINGUAGEM NATURAL NO CHAT
+      const extractCommandsFromChat = (text) => {
+        const added = [];
+        const regex = /(ganhei|recebi|gastei|paguei|comprei|guardei|investi)\s+(?:r\$\s*)?(\d+(?:[.,]\d+)?)\s*(?:reais\s*)?(?:de|em|no|na|com)?\s*([a-záéíóúâêôãõç\s]{2,25})?/gi;
+        let match;
+        const newItems = [];
+
+        while ((match = regex.exec(text)) !== null) {
+          const verb = match[1].toLowerCase();
+          const val = parseFloat(match[2].replace(',', '.'));
+          const rawDesc = (match[3] || '').trim() || (verb.includes('ganh') || verb.includes('receb') ? 'Receita' : verb.includes('guard') || verb.includes('invest') ? 'Aporte Cofre' : 'Despesa');
+
+          if (!isNaN(val) && val > 0) {
+            const type = (verb === 'ganhei' || verb === 'recebi') ? 'income' : (verb === 'guardei' || verb === 'investi') ? 'saved' : 'expense';
+            const cat = type === 'income' ? 'Renda' : type === 'saved' ? 'Cofre' : autoClassifyExpense(rawDesc);
+            newItems.push({
+              id: Date.now() + Math.random(),
+              desc: rawDesc.charAt(0).toUpperCase() + rawDesc.slice(1),
+              amount: val,
+              type,
+              category: cat
+            });
+            added.push(`${type === 'income' ? '+' : type === 'saved' ? '♦' : '-'}${formatBRL(val)} (${rawDesc})`);
+          }
+        }
+
+        if (newItems.length > 0) {
+          setTransactions(prev => [...newItems, ...prev]);
+          setXp(p => p + newItems.length * 25);
+        }
+        return added;
+      };
+
+      // 🧠 ANALISTA CONVERSACIONAL NATIVO (Responde dinamicamente a qualquer pergunta com cálculos reais!)
+      const generateDynamicNativeAnalyst = (userQuestion, newlyAdded) => {
+        const q = userQuestion.toLowerCase();
+        const expensesSorted = transactions.filter(t => t.type === 'expense').sort((a, b) => b.amount - a.amount);
+        const biggestExp = expensesSorted[0];
+        const remainingGoal = activeGoal ? Math.max(0, activeGoal.targetAmount - totalSavedSoFar) : 0;
+        const monthsNeededAi = aiOptimizedMonthlySave > 0 ? Math.ceil(remainingGoal / aiOptimizedMonthlySave) : null;
+
+        const actionPrefix = newlyAdded.length > 0
+          ? `✅ **Lançamento Automático Realizado:** Registrei no seu Livro Caixa: **${newlyAdded.join(', ')}**.\n\n`
+          : '';
+
+        // Verifica se o usuário perguntou "quanto rende X reais" na pergunta
+        const customAmountMatch = q.match(/(?:investir|guardar|aplicar|tenho|juntar)\s+(?:r\$\s*)?(\d+(?:[.,]\d+)?)/i);
+        if (customAmountMatch) {
+          const customVal = parseFloat(customAmountMatch[1].replace(',', '.'));
+          const sim12Selic = Math.round(customVal * Math.pow(1.0086, 12));
+          const sim12Lci = Math.round(customVal * Math.pow(1.0094, 12));
+          return `${actionPrefix}📈 **Simulação Personalizada para ${formatBRL(customVal)} (em 12 meses):**\n` +
+            `• **No Tesouro Selic / CDB 100% CDI:** Vira **${formatBRL(sim12Selic)}** (lucro líquido de **+${formatBRL(sim12Selic - customVal)}** com resgate imediato).\n` +
+            `• **Em LCI / LCA (Isenta de IR):** Vira **${formatBRL(sim12Lci)}** (lucro livre de imposto de **+${formatBRL(sim12Lci - customVal)}** com proteção do FGC).\n` +
+            `• **Se você aportar ${formatBRL(customVal)} todo mês durante 1 ano:** Acumulará **${formatBRL(calcCompoundGrowth(0, customVal, 0.0094, 12))}**!`;
+        }
+
+        if (q.includes('invest') || q.includes('segur') || q.includes('selic') || q.includes('cdb') || q.includes('lci')) {
+          return `${actionPrefix}🛡️ **Alocação Recomendada para sua Grana (${formatBRL(totalSavedSoFar)} atual + ${formatBRL(monthlyDeposit)}/mês):**\n` +
+            `1️⃣ **60% em Liquidez Diária (${formatBRL(Math.round(monthlyDeposit * 0.6))}/mês):** Coloque no **Tesouro Selic** ou **CDB 100% CDI** de banco sólido (Itaú, Nubank, Sofisa, Inter) com garantia do FGC. Rende todo dia útil sem risco.\n` +
+            `2️⃣ **40% em Aceleração Isenta (${formatBRL(Math.round(monthlyDeposit * 0.4))}/mês):** Aplique em **LCI ou LCA (90%+ do CDI)**. Zero Imposto de Renda!\n` +
+            `📊 **Resultado em ${simHorizonMonths} meses:** Seu patrimônio chegará a **${formatBRL(finalLciLca)}** (**+${formatBRL(yieldLciLca)}** só de juros seguros, contra apenas ${formatBRL(yieldPoupanca)} na Poupança).`;
+        }
+
+        if (q.includes('python') || q.includes('ia') || q.includes('renda') || q.includes('ganhar')) {
+          return `${actionPrefix}🐍 **Estratégia para Multiplicar seus Aportes com Python & IA:**\n` +
+            `• Hoje sua capacidade otimizada de poupança é de **${formatBRL(aiOptimizedMonthlySave)}/mês**.\n` +
+            `• Se você criar apenas **1 automação ou micro-SaaS em Python** (ex: bot de triagem no WhatsApp, leitor de PDFs ou scraper de dados) cobrando R$ 350/mês de 2 clientes (+R$ 700/mês), seu potencial de investimento salta para **${formatBRL(aiOptimizedMonthlySave + 700)}/mês**, batendo sua meta **"${activeGoal?.title}"** na metade do tempo!`;
+        }
+
+        if (currentIncome === 0 && currentExpense === 0 && newlyAdded.length === 0) {
+          return `📋 **Como iniciar sua Auditoria Agora Mesmo:**\nSeu Mês ${currentMonthNum} está em R$ 0,00. Clique no botão verde **"🧪 Preencher Dados de Exemplo"** na barra esquerda (ou digite aqui no chat: *"Ganhei 4200 de salário, gastei 1500 de aluguel e 480 de iFood"*) para eu calcular seus cortes e projeções em tempo real!`;
+        }
+
+        return `${actionPrefix}🔍 **Raio-X Analítico do Mês ${currentMonthNum}:**\n` +
+          `• **Receita:** ${formatBRL(currentIncome)} | **Gastos:** ${formatBRL(currentExpense)} | **Livre na Conta:** ${formatBRL(freeCashBalance)}.\n` +
+          (biggestExp ? `• **Foco de Atenção:** Seu maior gasto registrado é **"${biggestExp.desc}"** (${formatBRL(biggestExp.amount)} — categoria *${biggestExp.category}*).\n` : '') +
+          `• **Como Poupar Mais:** Cortando 50% dos supérfluos (**+${formatBRL(aiCutSuperfluous)}**) e 15% dos variáveis (**+${formatBRL(aiCutVariable)}**) + seu saldo livre (**${formatBRL(freeCashBalance)}**), você guarda **${formatBRL(aiOptimizedMonthlySave)}/mês**.\n` +
+          `• **Meta "${activeGoal?.title}" (${formatBRL(activeGoal?.targetAmount)}):** Nesse ritmo otimizado aplicado no Tesouro Selic/LCI, você conquista essa marca em **${monthsNeededAi || 1} meses**!`;
+      };
+
+      // 🚀 DISPARAR ANÁLISE NO CONSOLE IA
+      const askFinancialAnalyzer = async (customQuestion) => {
+        const question = customQuestion || chatInput;
+        if (!question.trim() || isAiThinking) return;
+
+        playSound('click', muted);
+        const addedFromText = extractCommandsFromChat(question);
+        const userMsg = { id: Date.now(), sender: 'user', text: question };
+        const historyNext = [...aiMessages, userMsg];
+        setAiMessages(historyNext);
+        if (!customQuestion) setChatInput('');
+        setIsAiThinking(true);
+
+        const cleanKey = geminiKey.replace(/["'\s]/g, '');
+
+        // Só chama a nuvem se for uma chave válida AIza... (Gemini) ou gsk_... (Groq)
+        if (cleanKey.startsWith('AIza') || cleanKey.startsWith('gsk_')) {
+          try {
+            const detailedList = transactions.map(t => `${t.desc} (${t.category}: ${formatBRL(t.amount)})`).join(', ') || 'Sem lançamentos';
+            const sysInstruction = `Você é Lorde Noctis, Analista Financeiro Pessoal e Especialista em Renda Fixa Segura no Brasil (Tesouro Selic, CDB 100% CDI com FGC, LCI/LCA).
+Dados reais do usuário (Mês ${currentMonthNum}): Renda=${formatBRL(currentIncome)}, Gastos=${formatBRL(currentExpense)} (Essenciais=${formatBRL(essentialExp)}, Variáveis=${formatBRL(variableExp)}, Supérfluos=${formatBRL(superfluousExp)}), Guardado=${formatBRL(totalSavedSoFar)}, Saldo Livre=${formatBRL(freeCashBalance)}, Potencial Otimizado IA=${formatBRL(aiOptimizedMonthlySave)}/mês. Itens: ${detailedList}.
+Cite os itens do usuário pelo nome, mostre contas exatas e responda em português de forma enxuta (máx 4 tópicos curtos).`;
+
+            let replyText = '';
+            if (cleanKey.startsWith('AIza')) {
+              const mod = detectedModel || 'gemini-2.5-flash';
+              const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${cleanKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  systemInstruction: { parts: [{ text: sysInstruction }] },
+                  contents: historyNext.slice(-6).map(m => ({
+                    role: m.sender === 'user' ? 'user' : 'model',
+                    parts: [{ text: m.text }]
+                  })),
+                  generationConfig: { temperature: 0.65, maxOutputTokens: 600 }
+                })
+              });
+              const data = await res.json();
+              if (res.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                replyText = data.candidates[0].content.parts[0].text;
+                setApiStatus('valid');
+              }
+            } else if (cleanKey.startsWith('gsk_')) {
+              const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cleanKey}` },
+                body: JSON.stringify({
+                  model: 'llama-3.3-70b-versatile',
+                  messages: [
+                    { role: 'system', content: sysInstruction },
+                    ...historyNext.slice(-6).map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text }))
+                  ]
+                })
+              });
+              const data = await res.json();
+              if (res.ok && data?.choices?.[0]?.message?.content) {
+                replyText = data.choices[0].message.content;
+                setApiStatus('valid');
+              }
+            }
+
+            if (replyText) {
+              playSound('success', muted);
+              setAiMessages(prev => [...prev, {
+                id: Date.now() + 1,
+                sender: 'ai',
+                badge: `⚡ LORDE NOCTIS — IA AO VIVO (${detectedModel})`,
+                text: replyText
+              }]);
+              setIsAiThinking(false);
+              setXp(p => p + 20);
+              setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+              return;
+            }
+          } catch (e) {}
+        }
+
+        // Resposta do Analista Nativo Inteligente (Sem erros falsos da OpenAI!)
+        await new Promise(r => setTimeout(r, 380));
+        const nativeReply = generateDynamicNativeAnalyst(question, addedFromText);
+        playSound('success', muted);
+        setAiMessages(prev => [...prev, {
+          id: Date.now() + 1,
+          sender: 'ai',
+          badge: '🧛 LORDE NOCTIS — ANALISADOR FINANCEIRO',
+          text: nativeReply
+        }]);
+        setIsAiThinking(false);
+        setXp(p => p + 15);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+      };
+
+      const handleAddTransaction = (e) => {
+        e.preventDefault();
+        const num = parseFloat(String(txAmount).replace(',', '.'));
+        if (!txDesc.trim() || isNaN(num) || num <= 0) return;
+
+        playSound('coin', muted);
+        const cat = txType === 'income' ? 'Renda' : txType === 'saved' ? 'Cofre' : txCategory;
+        setTransactions(prev => [{ id: Date.now(), desc: txDesc.trim(), amount: num, type: txType, category: cat }, ...prev]);
+        setXp(p => p + 25);
+        setTxDesc('');
+        setTxAmount('');
+      };
+
+      const handleAddHabit = (e) => {
+        e.preventDefault();
+        if (!newHabitTitle.trim()) return;
+        playSound('success', muted);
+        setHabits(prev => [{
+          id: Date.now(),
+          title: newHabitTitle.trim(),
+          category: newHabitCat,
+          xp: Number(newHabitXp) || 50,
+          completed: false
+        }, ...prev]);
+        setNewHabitTitle('');
+      };
+
+      const handleLoadDemo = () => {
+        playSound('success', muted);
+        setTransactions([
+          { id: 1, desc: 'Salário Mensal TI', amount: 4200, type: 'income', category: 'Renda' },
+          { id: 2, desc: 'Aluguel + Condomínio + Luz', amount: 1550, type: 'expense', category: 'Essencial' },
+          { id: 3, desc: 'Supermercado & Feira', amount: 680, type: 'expense', category: 'Essencial' },
+          { id: 4, desc: 'Uber & Transporte', amount: 290, type: 'expense', category: 'Variável' },
+          { id: 5, desc: 'iFood, Delivery & Lanches', amount: 540, type: 'expense', category: 'Supérfluo' },
+          { id: 6, desc: 'Assinaturas & Impulso', amount: 220, type: 'expense', category: 'Supérfluo' },
+          { id: 7, desc: 'Aporte Inicial Tesouro Selic', amount: 600, type: 'saved', category: 'Cofre' }
+        ]);
+      };
+
+      const pillarsInfo = {
+        selic: {
+          title: '1. Tesouro Selic (Risco Soberano)',
+          desc: 'Garantido 100% pelo Governo Federal. Rende a taxa Selic todos os dias úteis e tem liquidez diária para resgatar quando quiser sem perda.'
+        },
+        cdb: {
+          title: '2. CDB 100% CDI de Liquidez Diária',
+          desc: 'Protegido pelo FGC (Fundo Garantidor de Créditos) até R$ 250 mil por CPF. Ideal para deixar sua Reserva de Emergência rendendo mais que a poupança.'
+        },
+        lci: {
+          title: '3. LCI / LCA (Isentas de Imposto de Renda)',
+          desc: 'Protegidas pelo FGC e com 0% de desconto de Imposto de Renda para pessoa física. Perfeitas para multiplicar metas de 6 a 24 meses.'
+        }
+      };
+
+      return (
+        <div className="h-screen w-screen overflow-hidden flex">
+          
+          {/* =========================================================
+              SIDEBAR ESQUERDA FIXA (IDÊNTICA À IMAGEM, SEM SCROLL)
+             ========================================================= */}
+          <aside className="w-64 glass-panel border-r border-white/10 p-4 flex flex-col justify-between shrink-0 h-full">
+            <div className="space-y-3.5">
+              {/* Cabeçalho da Sidebar */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="font-display text-base font-extrabold tracking-wider text-white flex items-center gap-1.5">
+                    <span className="text-rose-500">♦</span> NOCTIS AI
+                  </h1>
+                  <p className="text-[10px] text-zinc-400">Analisador Financeiro & Renda Fixa</p>
+                </div>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  Mês {currentMonthNum}
+                </span>
+              </div>
+
+              {/* Card do Avatar Noctis */}
+              <div className="glass-card rounded-2xl p-3 text-center">
+                <NoctisAvatar isAnalyzing={isAiThinking} />
+                <div className="mt-1.5">
+                  <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full inline-block ${
+                    apiStatus === 'valid'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  }`}>
+                    {apiStatus === 'valid' ? '🟢 GEMINI API CONECTADA' : '🧠 MODO ANALÍTICO PRONTO'}
+                  </span>
+                  <p className="text-[11px] text-zinc-300 mt-1.5">
+                    Potencial p/ Investir: <strong className="text-emerald-400">{formatBRL(aiOptimizedMonthlySave)}/mês</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* 4 Botões de Navegação Lateral */}
+              <nav className="space-y-1">
+                {[
+                  { id: 'ai_analyzer', label: 'Analisador IA & API Key', icon: '🧠', desc: 'Configurar chave e pedir mentoria' },
+                  { id: 'safe_invest', label: 'Investimentos Seguros', icon: '🛡️', desc: 'Simulador Selic, CDB e LCI/LCA' },
+                  { id: 'dashboard', label: 'Livro Caixa & Projeções', icon: '📊', desc: 'Lançar ganhos, gastos e marcas' },
+                  { id: 'habits', label: 'Hábitos de Riqueza', icon: '🎯', desc: 'Rituais diários de economia' }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { playSound('click', muted); setActiveTab(item.id); }}
+                    className={`w-full text-left px-3 py-2.5 rounded-2xl transition-all flex items-center gap-2.5 ${
+                      activeTab === item.id
+                        ? 'bg-gradient-to-r from-rose-600 to-rose-800 text-white shadow-lg border border-rose-400/30'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="text-base">{item.icon}</span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold truncate">{item.label}</div>
+                      <div className={`text-[10px] truncate ${activeTab === item.id ? 'text-rose-100' : 'text-zinc-500'}`}>{item.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </nav>
+
+              {/* Ações Rápidas de Dados */}
+              <div className="glass-card p-3 rounded-2xl space-y-1.5">
+                <span className="text-[9px] font-bold uppercase text-zinc-400 block">Ações Rápidas de Dados</span>
+                <button
+                  onClick={handleLoadDemo}
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold transition"
+                >
+                  🧪 Preencher Dados de Exemplo
+                </button>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={() => {
+                      if (transactions.length === 0) return;
+                      setClosedMonths([...closedMonths, { monthNum: currentMonthNum, income: currentIncome, expense: currentExpense, saved: currentMonthlySavePace }]);
+                      setCurrentMonthNum(m => m + 1);
+                      setTransactions([]);
+                    }}
+                    className="py-1 px-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 text-[10px] font-semibold"
+                  >
+                    📅 Fechar Mês
+                  </button>
+                  <button
+                    onClick={() => { setTransactions([]); setClosedMonths([]); setCurrentMonthNum(1); }}
+                    className="py-1 px-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[10px] font-semibold"
+                  >
+                    🗑️ Zerar Tudo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Rodapé da Sidebar */}
+            <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setShowApiWizard(!showApiWizard)}
+                className="flex-1 glass-card py-1.5 px-2.5 rounded-xl text-[11px] font-bold text-amber-300 hover:text-white text-center"
+              >
+                🔑 Configurar API Key
+              </button>
+              <button onClick={() => setMuted(!muted)} className="glass-card py-1.5 px-2.5 rounded-xl text-xs font-bold text-zinc-300">
+                {muted ? '🔇' : '🔊'}
+              </button>
+            </div>
+          </aside>
+
+          {/* =========================================================
+              ÁREA PRINCIPAL ZERO-SCROLL (CABE 100% NA ALTURA DA TELA)
+             ========================================================= */}
+          <main className="flex-1 flex flex-col h-full overflow-hidden">
+            
+            {/* TOPBAR COMPACTA */}
+            <header className="glass-panel border-b border-white/10 px-6 py-3 flex items-center justify-between shrink-0">
+              <div>
+                <h2 className="text-sm font-extrabold text-white flex items-center gap-2">
+                  {activeTab === 'ai_analyzer' && '🧠 Analisador Financeiro IA & Configurador da Chave Gratuita'}
+                  {activeTab === 'safe_invest' && '🛡️ Simulador de Investimentos Seguros (Multiplicador de Grana Guardada)'}
+                  {activeTab === 'dashboard' && '📊 Livro Caixa, Marcas & Gráfico de Projeção a Partir do Uso'}
+                  {activeTab === 'habits' && '🎯 Hábitos de Riqueza & Disciplina Financeira'}
+                </h2>
+                <p className="text-[11px] text-zinc-400">
+                  Grana Guardada: <strong className="text-amber-300">{formatBRL(totalSavedSoFar)}</strong> • Potencial c/ Cortes da IA: <strong className="text-emerald-400">{formatBRL(aiOptimizedMonthlySave)}/mês</strong> • Nível {level} ({xp}/{level * 150} XP)
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowApiWizard(!showApiWizard)}
+                className="px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold transition"
+              >
+                🔑 {apiStatus === 'valid' ? `Chave Ativa (${detectedModel}) ✓` : 'Colar & Testar API Key'}
+              </button>
+            </header>
+
+            {/* GAVETA DE CONFIGURAÇÃO DA CHAVE API */}
+            {showApiWizard && (
+              <div className="bg-zinc-900/95 border-b border-amber-500/40 px-6 py-3 shrink-0 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-amber-300">
+                    🔑 Conectar Chave Gratuita do Google AI Studio (A chave deve começar com "AIzaSy...")
+                  </span>
+                  <button onClick={() => setShowApiWizard(false)} className="text-xs text-zinc-400 hover:text-white">Fechar ✕</button>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    placeholder="Cole aqui sua chave AIzaSy... gerada em aistudio.google.com/apikey"
+                    value={geminiKey}
+                    onChange={e => setGeminiKey(e.target.value)}
+                    className="flex-1 bg-zinc-950 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                  />
+                  <button
+                    onClick={handleValidateApiKey}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded-xl transition"
+                  >
+                    ⚡ Validar Chave
+                  </button>
+                </div>
+                {apiStatusMsg && (
+                  <p className={`text-xs font-semibold ${apiStatus === 'valid' ? 'text-emerald-400' : 'text-amber-300'}`}>
+                    {apiStatusMsg}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* WORKSPACE CENTRAL (FLEX-1 OVERFLOW-HIDDEN PARA ZERO SCROLL DE PÁGINA!) */}
+            <div className="flex-1 p-5 flex flex-col gap-4 overflow-hidden max-w-7xl w-full mx-auto">
+              
+              {/* 4 KPI CARDS NO TOPO (COMPACTOS E REATIVOS) */}
+              <div className="grid grid-cols-4 gap-3.5 shrink-0">
+                <div className="glass-card px-4 py-3 rounded-2xl border-l-4 border-l-emerald-500">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">Ganhos no Mês {currentMonthNum}</span>
+                  <div className="text-xl font-extrabold text-white mt-0.5">{formatBRL(currentIncome)}</div>
+                  <p className="text-[10px] text-zinc-400">Gastos totais: {formatBRL(currentExpense)}</p>
+                </div>
+
+                <div className="glass-card px-4 py-3 rounded-2xl border-l-4 border-l-rose-500">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">Margem de Corte (IA)</span>
+                  <div className="text-xl font-extrabold text-rose-400 mt-0.5">+{formatBRL(aiCutSuperfluous + aiCutVariable)}</div>
+                  <p className="text-[10px] text-zinc-400">50% dos supérfluos + 15% variáveis</p>
+                </div>
+
+                <div className="glass-card px-4 py-3 rounded-2xl border-l-4 border-l-amber-400">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">Potencial p/ Guardar</span>
+                  <div className="text-xl font-extrabold text-amber-300 mt-0.5">{formatBRL(aiOptimizedMonthlySave)}<span className="text-xs font-normal">/mês</span></div>
+                  <p className="text-[10px] text-zinc-400">Já guardado no cofre: {formatBRL(totalSavedSoFar)}</p>
+                </div>
+
+                <div className="glass-card px-4 py-3 rounded-2xl border-l-4 border-l-teal-400 bg-gradient-to-br from-teal-950/30 to-zinc-900/70">
+                  <span className="text-[10px] font-bold text-teal-300 uppercase">Projeção Renda Fixa ({simHorizonMonths}m)</span>
+                  <div className="text-xl font-extrabold text-emerald-400 mt-0.5">{formatBRL(finalLciLca)}</div>
+                  <p className="text-[10px] text-teal-200">Lucro de juros seguros: +{formatBRL(yieldLciLca)}</p>
+                </div>
+              </div>
+
+              {/* =========================================================
+                  ABA 1: ANALISADOR IA & API KEY (CABE 100% SEM SCROLL!)
+                 ========================================================= */}
+              {activeTab === 'ai_analyzer' && (
+                <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
+                  
+                  {/* Coluna Esquerda (5 col): Comandos + Pílulas dos 3 Investimentos Seguros */}
+                  <div className="col-span-5 flex flex-col justify-between gap-3 min-h-0">
+                    
+                    {/* Card 1: Comandos de Consultoria */}
+                    <div className="glass-card p-4 rounded-3xl border border-rose-500/25 flex-1 flex flex-col justify-between min-h-0">
+                      <div>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">
+                          Motor de Análise Ativo
+                        </span>
+                        <h3 className="text-xs font-bold text-white mt-1.5">
+                          🎯 Comandos de Consultoria Financeira IA
+                        </h3>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">
+                          Clique em um módulo abaixo para auditar seus números reais:
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5 my-auto">
+                        {[
+                          {
+                            title: '🛡️ Onde Investir Minha Grana com Segurança?',
+                            sub: 'Compara Tesouro Selic, CDB 100% CDI (FGC) e LCI/LCA',
+                            prompt: 'Onde devo investir minha grana guardada com segurança total no Brasil (Tesouro Selic, CDB 100% CDI e LCI/LCA) e quanto vai render?'
+                          },
+                          {
+                            title: '✂️ Analisar Meus Gastos e Ensinar a Poupar',
+                            sub: 'Mostra onde cortar sem perder qualidade de vida',
+                            prompt: 'Analise meus ganhos e gastos deste mês e me mostre onde cortar excessos para poupar mais.'
+                          },
+                          {
+                            title: '📈 Simular R$ 500/mês nos Próximos 12 Meses',
+                            sub: 'Calcula o efeito bola de neve dos juros compostos',
+                            prompt: 'Quanto vou acumular se eu investir R$ 500 por mês em Renda Fixa segura durante 12 meses?'
+                          },
+                          {
+                            title: '🐍 Como Aumentar Renda com Python & IA',
+                            sub: 'Estratégias práticas para aportar mais todo mês',
+                            prompt: 'Como posso usar Python e IA para gerar renda extra e acelerar minha meta financeira?'
+                          }
+                        ].map((btn, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => askFinancialAnalyzer(btn.prompt)}
+                            className="w-full text-left px-3 py-2 rounded-xl bg-zinc-950/85 hover:bg-rose-950/35 border border-white/10 hover:border-rose-500/40 transition group"
+                          >
+                            <div className="text-xs font-bold text-white group-hover:text-rose-300">{btn.title}</div>
+                            <div className="text-[10px] text-zinc-400">{btn.sub}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Card 2 Compacto: Os 3 Investimentos Seguros em Abas Clicáveis (Sem estourar a tela!) */}
+                    <div className="glass-card p-3.5 rounded-3xl shrink-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">
+                          📚 Os 3 Pilares Seguros do Brasil
+                        </span>
+                        <div className="flex gap-1">
+                          {[
+                            { id: 'selic', label: '1. Selic' },
+                            { id: 'cdb', label: '2. CDB FGC' },
+                            { id: 'lci', label: '3. LCI/LCA' }
+                          ].map(p => (
+                            <button
+                              key={p.id}
+                              onClick={() => setSelectedPillar(p.id)}
+                              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition ${
+                                selectedPillar === p.id ? 'bg-emerald-600 text-white' : 'bg-zinc-900 text-zinc-400 hover:text-white'
+                              }`}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-zinc-950/80 border border-white/5">
+                        <strong className="text-xs text-white block">{pillarsInfo[selectedPillar].title}</strong>
+                        <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">{pillarsInfo[selectedPillar].desc}</p>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Coluna Direita (7 col): Console do Analisador Financeiro Noctis AI */}
+                  <div className="col-span-7 glass-card p-4 rounded-3xl flex flex-col min-h-0">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-white/10 shrink-0">
+                      <div>
+                        <h3 className="text-xs font-bold text-white">💬 Console do Analisador Financeiro Noctis AI</h3>
+                        <p className="text-[10px] text-zinc-400">
+                          A IA lê automaticamente seus lançamentos ({transactions.length} registros no Mês {currentMonthNum}) ou cadastra o que você digitar
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowApiWizard(true)}
+                        className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-amber-300 border border-amber-500/30"
+                      >
+                        🔑 Configurar Chave
+                      </button>
+                    </div>
+
+                    {/* Área Interna de Mensagens (Único local com scroll suave interno) */}
+                    <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1 min-h-0">
+                      {aiMessages.map(m => (
+                        <div
+                          key={m.id}
+                          className={`p-3.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${
+                            m.sender === 'ai'
+                              ? 'bg-zinc-950/90 border border-rose-500/30 text-zinc-200 mr-4'
+                              : 'bg-gradient-to-r from-rose-600 to-rose-700 text-white ml-12'
+                          }`}
+                        >
+                          <div className="text-[9px] font-extrabold uppercase tracking-wider text-rose-400 mb-1">
+                            {m.sender === 'ai' ? (m.badge || '🧛 LORDE NOCTIS') : 'VOCÊ'}
+                          </div>
+                          <div>{m.text}</div>
+                        </div>
+                      ))}
+                      {isAiThinking && (
+                        <div className="text-xs text-emerald-400 animate-pulse font-semibold p-2">
+                          ⚡ Noctis AI está calculando seu diagnóstico personalizado...
+                        </div>
+                      )}
+                      <div ref={chatEndRef} />
+                    </div>
+
+                    <form
+                      onSubmit={e => { e.preventDefault(); askFinancialAnalyzer(); }}
+                      className="pt-2.5 border-t border-white/10 flex gap-2 shrink-0"
+                    >
+                      <input
+                        type="text"
+                        placeholder='Pergunte como investir ou dê uma ordem (ex: "Ganhei 4000 de salário e gastei 350 de iFood")...'
+                        value={chatInput}
+                        onChange={e => setChatInput(e.target.value)}
+                        className="flex-1 bg-zinc-950 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                      />
+                      <button
+                        type="submit"
+                        className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-5 py-2 rounded-xl transition"
+                      >
+                        Analisar
+                      </button>
+                    </form>
+                  </div>
+
+                </div>
+              )}
+
+              {/* =========================================================
+                  ABA 2: SIMULADOR DE INVESTIMENTOS SEGUROS (ZERO-SCROLL)
+                 ========================================================= */}
+              {activeTab === 'safe_invest' && (
+                <div className="flex-1 flex flex-col justify-between gap-4 min-h-0">
+                  <div className="glass-card p-5 rounded-3xl flex-1 flex flex-col justify-between">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-sm font-extrabold text-white">
+                          🛡️ Comparativo de Renda Fixa Segura: Quanto Sua Grana Guardada Vai Render?
+                        </h3>
+                        <p className="text-xs text-zinc-400">
+                          Simulando seu saldo atual no cofre ({formatBRL(basePrincipal)}) + aporte mensal de {formatBRL(monthlyDeposit)}/mês
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 bg-zinc-950 p-1 rounded-xl border border-white/10">
+                        <span className="text-xs font-bold text-zinc-400 px-2">Prazo:</span>
+                        {[6, 12, 24, 36].map(m => (
+                          <button
+                            key={m}
+                            onClick={() => setSimHorizonMonths(m)}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                              simHorizonMonths === m ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            {m} meses
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 my-auto">
+                      <div className="p-5 rounded-2xl bg-zinc-950/80 border border-white/10 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-zinc-400 uppercase">1. Poupança Comum</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">~0,58% a.m.</span>
+                        </div>
+                        <div className="text-2xl font-extrabold text-zinc-200">{formatBRL(finalPoupanca)}</div>
+                        <p className="text-xs text-zinc-400">
+                          Total aportado: {formatBRL(totalInvestedOutOfPocket)}<br />
+                          <strong className="text-amber-300">Lucro de Juros: +{formatBRL(yieldPoupanca)}</strong>
+                        </p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-zinc-950/90 border border-sky-500/40 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-sky-400 uppercase">2. Tesouro Selic / CDB 100%</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">Liquidez Diária</span>
+                        </div>
+                        <div className="text-2xl font-extrabold text-white">{formatBRL(finalTesouroCdb)}</div>
+                        <p className="text-xs text-zinc-300">
+                          Garantia FGC / Tesouro Nacional<br />
+                          <strong className="text-sky-300">Lucro Líquido: +{formatBRL(yieldTesouroCdb)}</strong>
+                        </p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/60 to-zinc-950 border-2 border-emerald-500/50 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-emerald-300 uppercase">3. LCI / LCA (Isento de IR)</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">Maior Retorno</span>
+                        </div>
+                        <div className="text-2xl font-extrabold text-emerald-400">{formatBRL(finalLciLca)}</div>
+                        <p className="text-xs text-emerald-100/90">
+                          Zero Imposto de Renda + Proteção FGC<br />
+                          <strong className="text-emerald-300">Lucro Livre: +{formatBRL(yieldLciLca)} (+{formatBRL(yieldLciLca - yieldPoupanca)} vs Poupança!)</strong>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-zinc-950/90 border border-white/5 flex items-center justify-between">
+                      <span className="text-xs text-zinc-300">
+                        💡 <strong>Dica de Ouro do Noctis:</strong> Mantenha de 3 a 6 meses do seu custo essencial ({formatBRL(essentialExp || 1500)}) no <strong>Tesouro Selic</strong> e invista o excedente em <strong>LCI/LCA</strong> para não pagar Imposto de Renda.
+                      </span>
+                      <button
+                        onClick={() => { setActiveTab('ai_analyzer'); askFinancialAnalyzer('Monte um plano prático para eu começar a investir no Tesouro Selic e LCI/LCA ainda esta semana.'); }}
+                        className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shrink-0 ml-4"
+                      >
+                        Pedir Passo a Passo à IA →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* =========================================================
+                  ABA 3: LIVRO CAIXA & PROJEÇÕES (ZERO-SCROLL LADO A LADO)
+                 ========================================================= */}
+              {activeTab === 'dashboard' && (
+                <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
+                  
+                  {/* Esquerda (7 col): Gráfico + Criador de Marcas */}
+                  <div className="col-span-7 glass-card p-4 rounded-3xl flex flex-col justify-between min-h-0">
+                    <div>
+                      <h3 className="text-xs font-bold text-white mb-1">
+                        📈 Curva de Acúmulo Patrimonial (A partir do Uso no Mês {currentMonthNum})
+                      </h3>
+                      <p className="text-[11px] text-zinc-400 mb-2">
+                        Compara seu ritmo atual (amarelo) com o potencial otimizado pela IA + Renda Fixa (verde)
+                      </p>
+                      <CompactProjectionChart timelineData={timelineData} activeGoal={activeGoal} formatBRL={formatBRL} />
+                    </div>
+
+                    <div className="pt-3 border-t border-white/10 space-y-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-xs font-bold text-zinc-300 mr-1">🎯 Marcas:</span>
+                        {goals.map(g => (
+                          <button
+                            key={g.id}
+                            onClick={() => setSelectedGoalId(g.id)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
+                              selectedGoalId === g.id ? 'bg-rose-600 text-white border-rose-400' : 'bg-zinc-900 text-zinc-400 border-white/10'
+                            }`}
+                          >
+                            {g.title}: {formatBRL(g.targetAmount)}
+                          </button>
+                        ))}
+                      </div>
+
+                      <form
+                        onSubmit={e => {
+                          e.preventDefault();
+                          const val = parseFloat(String(newGoalTarget).replace(',', '.'));
+                          if (!newGoalTitle.trim() || isNaN(val) || val <= 0) return;
+                          const ng = { id: Date.now(), title: newGoalTitle.trim(), targetAmount: val };
+                          setGoals([...goals, ng]);
+                          setSelectedGoalId(ng.id);
+                          setNewGoalTitle('');
+                          setNewGoalTarget('');
+                        }}
+                        className="flex gap-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Nova Marca (ex: Notebook, Viagem)..."
+                          value={newGoalTitle}
+                          onChange={e => setNewGoalTitle(e.target.value)}
+                          className="flex-1 bg-zinc-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
+                        />
+                        <input
+                          type="number"
+                          placeholder="R$ Meta"
+                          value={newGoalTarget}
+                          onChange={e => setNewGoalTarget(e.target.value)}
+                          className="w-28 bg-zinc-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
+                        />
+                        <button type="submit" className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-1.5 rounded-xl">
+                          + Marca
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+
+                  {/* Direita (5 col): Novo Lançamento + Lista Rolável */}
+                  <div className="col-span-5 glass-card p-4 rounded-3xl flex flex-col gap-3 min-h-0">
+                    <form onSubmit={handleAddTransaction} className="space-y-2 shrink-0">
+                      <h3 className="text-xs font-bold text-white">➕ Lançar no Mês {currentMonthNum}</h3>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { id: 'income', label: '+ Ganhei', cls: 'bg-emerald-600 text-white' },
+                          { id: 'expense', label: '- Gastei', cls: 'bg-rose-600 text-white' },
+                          { id: 'saved', label: '♦ Guardei', cls: 'bg-amber-500 text-zinc-950' }
+                        ].map(b => (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => setTxType(b.id)}
+                            className={`py-1.5 rounded-xl text-xs font-bold ${txType === b.id ? b.cls : 'bg-zinc-900 text-zinc-400'}`}
+                          >
+                            {b.label}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Descrição (Ex: Salário, iFood, Aluguel...)"
+                        value={txDesc}
+                        onChange={e => {
+                          setTxDesc(e.target.value);
+                          if (txType === 'expense') setTxCategory(autoClassifyExpense(e.target.value));
+                        }}
+                        className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="R$ Valor"
+                          value={txAmount}
+                          onChange={e => setTxAmount(e.target.value)}
+                          className="flex-1 bg-zinc-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
+                        />
+                        {txType === 'expense' && (
+                          <select
+                            value={txCategory}
+                            onChange={e => setTxCategory(e.target.value)}
+                            className="bg-zinc-950 border border-white/10 rounded-xl px-2 py-1.5 text-xs text-white"
+                          >
+                            <option value="Essencial">Essencial</option>
+                            <option value="Variável">Variável</option>
+                            <option value="Supérfluo">Supérfluo</option>
+                          </select>
+                        )}
+                        <button type="submit" className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-1.5 rounded-xl">
+                          Salvar
+                        </button>
+                      </div>
+                    </form>
+
+                    <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 border-t border-white/10 pt-2 min-h-0">
+                      {transactions.length === 0 ? (
+                        <p className="text-xs text-zinc-500 text-center py-8">
+                          Extrato vazio. Adicione acima ou clique em "🧪 Preencher Dados de Exemplo" na barra lateral!
+                        </p>
+                      ) : (
+                        transactions.map(tx => (
+                          <div key={tx.id} className="px-3 py-2 rounded-xl bg-zinc-950/90 border border-white/5 flex justify-between items-center">
+                            <div className="truncate pr-2">
+                              <span className="text-xs font-bold text-white block truncate">{tx.desc}</span>
+                              <span className="text-[10px] text-zinc-400">{tx.category}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className={`text-xs font-extrabold ${tx.type === 'expense' ? 'text-rose-400' : tx.type === 'saved' ? 'text-amber-300' : 'text-emerald-400'}`}>
+                                {tx.type === 'expense' ? '-' : '+'}{formatBRL(tx.amount)}
+                              </span>
+                              <button onClick={() => setTransactions(transactions.filter(i => i.id !== tx.id))} className="text-zinc-600 hover:text-rose-400 text-xs">✕</button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* =========================================================
+                  ABA 4: HÁBITOS DE RIQUEZA (COM CRIAÇÃO E ZERO-SCROLL!)
+                 ========================================================= */}
+              {activeTab === 'habits' && (
+                <div className="flex-1 glass-card p-5 rounded-3xl flex flex-col gap-4 min-h-0">
+                  
+                  {/* Barra de Criação de Novo Hábito */}
+                  <form onSubmit={handleAddHabit} className="flex gap-2.5 shrink-0">
+                    <input
+                      type="text"
+                      placeholder="Digite um novo hábito (ex: Poupar R$ 20 hoje, Estudar Python, Zero iFood)..."
+                      value={newHabitTitle}
+                      onChange={e => setNewHabitTitle(e.target.value)}
+                      className="flex-1 bg-zinc-950 border border-white/15 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                    />
+                    <select
+                      value={newHabitCat}
+                      onChange={e => setNewHabitCat(e.target.value)}
+                      className="bg-zinc-950 border border-white/15 rounded-xl px-3 py-2 text-xs text-white"
+                    >
+                      <option value="Finanças">💰 Finanças</option>
+                      <option value="Economia">🛡️ Economia</option>
+                      <option value="Carreira TI">💻 Carreira TI</option>
+                      <option value="Saúde">⚡ Saúde</option>
+                    </select>
+                    <select
+                      value={newHabitXp}
+                      onChange={e => setNewHabitXp(Number(e.target.value))}
+                      className="bg-zinc-950 border border-white/15 rounded-xl px-3 py-2 text-xs text-white"
+                    >
+                      <option value={30}>+30 XP</option>
+                      <option value={50}>+50 XP</option>
+                      <option value={80}>+80 XP</option>
+                    </select>
+                    <button
+                      type="submit"
+                      className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-5 py-2 rounded-xl transition shrink-0"
+                    >
+                      + Adicionar Hábito
+                    </button>
+                  </form>
+
+                  {/* Lista Rolável de Hábitos */}
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0">
+                    {habits.map(h => (
+                      <div key={h.id} className="p-3.5 rounded-2xl bg-zinc-950/90 border border-white/10 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              playSound('success', muted);
+                              setHabits(habits.map(i => i.id === h.id ? { ...i, completed: !i.completed } : i));
+                              if (!h.completed) setXp(p => p + h.xp);
+                            }}
+                            className={`w-9 h-9 rounded-xl font-bold text-xs transition ${
+                              h.completed ? 'bg-emerald-500 text-zinc-950 shadow' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white'
+                            }`}
+                          >
+                            {h.completed ? '✓' : '♦'}
+                          </button>
+                          <div>
+                            <span className={`text-xs font-bold block ${h.completed ? 'line-through text-zinc-500' : 'text-white'}`}>
+                              {h.title}
+                            </span>
+                            <span className="text-[10px] text-zinc-400">{h.category}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-bold text-rose-400">+{h.xp} XP</span>
+                          <button
+                            onClick={() => setHabits(habits.filter(i => i.id !== h.id))}
+                            className="text-zinc-600 hover:text-rose-400 text-xs px-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
